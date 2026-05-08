@@ -1,0 +1,16 @@
+{
+  "name": "ZEKKEI ATLAS",
+  "short_name": "ZEKKEI",
+  "description": "季節、時間、気分で出会う、一生に一度の絶景。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml"
+    }
+  ]
+}
