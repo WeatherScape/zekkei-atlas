@@ -16,7 +16,6 @@ import {
   Wallet
 } from "lucide-react";
 import {
-  allTags,
   seasonOptions,
   spots,
   timeOptions,
@@ -52,6 +51,20 @@ const modeOptions: Array<{ value: MapViewMode; label: string; description: strin
   { value: "overseas", label: "海外", description: "海外スポット" }
 ];
 
+const scenicTypeFilters = [
+  { label: "星空", value: "星空" },
+  { label: "海", value: "海" },
+  { label: "紅葉", value: "紅葉" },
+  { label: "雪", value: "雪" },
+  { label: "雲海", value: "雲海" },
+  { label: "滝", value: "滝" },
+  { label: "夕日", value: "夕日" },
+  { label: "離島", value: "島" },
+  { label: "ドライブ", value: "ドライブ" },
+  { label: "カップル", value: "カップル" },
+  { label: "一生に一度", value: "一生に一度" }
+];
+
 const islandIds = new Set(["ishigaki", "hateruma", "miyako", "taketomi", "kouri", "yakushima", "okunoshima"]);
 
 function spotMatchesKeyword(spot: Spot, keyword: string) {
@@ -82,6 +95,14 @@ function validOrAll(value: string | undefined, options: string[]) {
   return value && options.includes(value) ? value : "all";
 }
 
+function normalizeTagFilter(tag: string) {
+  return tag === "離島" ? "島" : tag;
+}
+
+function getTagLabel(tag: string) {
+  return tag === "島" ? "離島" : tag;
+}
+
 export function MapExplorer({
   initialSearch = "",
   initialTag = "",
@@ -92,7 +113,7 @@ export function MapExplorer({
   initialDifficulty = ""
 }: MapExplorerProps) {
   const [keyword, setKeyword] = useState(initialSearch);
-  const [selectedTags, setSelectedTags] = useState<string[]>(initialTag ? [initialTag] : []);
+  const [selectedTags, setSelectedTags] = useState<string[]>(initialTag ? [normalizeTagFilter(initialTag)] : []);
   const [season, setSeason] = useState(validOrAll(initialSeason, seasonOptions));
   const [time, setTime] = useState(validOrAll(initialTime, timeOptions));
   const [style, setStyle] = useState(validOrAll(initialStyle, travelStyleOptions));
@@ -171,7 +192,7 @@ export function MapExplorer({
   const aiPrompt = encodeURIComponent(
     [
       keyword ? `キーワード:${keyword}` : "",
-      selectedTags.length ? `タグ:${selectedTags.join("、")}` : "",
+      selectedTags.length ? `タグ:${selectedTags.map(getTagLabel).join("、")}` : "",
       season !== "all" ? `季節:${season}` : "",
       time !== "all" ? `時間帯:${time}` : "",
       style !== "all" ? `スタイル:${style}` : "",
@@ -251,17 +272,46 @@ export function MapExplorer({
             ))}
           </div>
 
+          <div className="mb-5 flex flex-col gap-3 rounded-[24px] border border-white/[0.10] bg-white/[0.045] p-3 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+              <span className="shrink-0 px-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Season Layer
+              </span>
+              <FilterChip
+                label="すべて"
+                active={season === "all"}
+                onClick={() => setSeason("all")}
+                className="shrink-0"
+              />
+              {seasonOptions.map((item) => (
+                <FilterChip
+                  key={item}
+                  label={item}
+                  active={season === item}
+                  onClick={() => setSeason(item)}
+                  className="shrink-0"
+                />
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge>{season === "all" ? `${visibleSpots.length}件を表示中` : `${season}におすすめの絶景 ${visibleSpots.length}件`}</Badge>
+              {selectedTags.map((tag) => (
+                <Badge key={tag}>#{getTagLabel(tag)}</Badge>
+              ))}
+            </div>
+          </div>
+
           <div className="mb-5 flex gap-2 overflow-x-auto pb-2 xl:hidden">
             {popularMobileFilters().map((item) => (
               <FilterChip
                 key={item}
                 label={item}
-                active={selectedTags.includes(item) || season === item || style === item || time === item}
+                active={selectedTags.includes(normalizeTagFilter(item)) || season === item || style === item || time === item}
                 onClick={() => {
                   if (seasonOptions.includes(item)) setSeason(season === item ? "all" : item);
                   else if (timeOptions.includes(item)) setTime(time === item ? "all" : item);
                   else if (travelStyleOptions.includes(item)) setStyle(style === item ? "all" : item);
-                  else toggleTag(item);
+                  else toggleTag(normalizeTagFilter(item));
                 }}
                 className="shrink-0"
               />
@@ -279,20 +329,20 @@ export function MapExplorer({
                   <Badge>{activeFilterCount} active</Badge>
                 </div>
 
-                <FilterGroup title="タグ">
+                <FilterGroup title="絶景タイプ">
                   <div className="flex flex-wrap gap-2">
-                    {allTags.map((tag) => (
+                    {scenicTypeFilters.map((tag) => (
                       <FilterChip
-                        key={tag}
-                        label={tag}
-                        active={selectedTags.includes(tag)}
-                        onClick={() => toggleTag(tag)}
+                        key={tag.value}
+                        label={tag.label}
+                        active={selectedTags.includes(tag.value)}
+                        onClick={() => toggleTag(tag.value)}
                       />
                     ))}
                   </div>
                 </FilterGroup>
 
-                <FilterGroup title="季節">
+                <FilterGroup title="季節レイヤー">
                   <ChipRow value={season} options={seasonOptions} onChange={(value) => setSeason(value)} />
                 </FilterGroup>
 
@@ -356,7 +406,7 @@ export function MapExplorer({
                 <div className="flex flex-wrap gap-2">
                   <Badge>{modeOptions.find((item) => item.value === mode)?.label}</Badge>
                   {selectedTags.slice(0, 4).map((tag) => (
-                    <Badge key={tag}>#{tag}</Badge>
+                    <Badge key={tag}>#{getTagLabel(tag)}</Badge>
                   ))}
                   {season !== "all" ? <Badge>{season}</Badge> : null}
                   {time !== "all" ? <Badge>{time}</Badge> : null}
@@ -370,6 +420,8 @@ export function MapExplorer({
                 onSelect={(spot) => setSelectedSpotId(spot.id)}
                 onReset={resetFilters}
                 mode={mode}
+                season={season}
+                selectedTags={selectedTags}
               />
 
               <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
@@ -407,7 +459,7 @@ export function MapExplorer({
 
                   <div className="mt-5 flex flex-wrap gap-2">
                     {selectedSpot.tags.map((tag) => (
-                      <Badge key={tag}>#{tag}</Badge>
+                      <Badge key={tag}>#{getTagLabel(tag)}</Badge>
                     ))}
                   </div>
 
@@ -454,6 +506,7 @@ function popularMobileFilters() {
     "星空",
     "海",
     "夕日",
+    "離島",
     "紅葉",
     "雪",
     "夏",

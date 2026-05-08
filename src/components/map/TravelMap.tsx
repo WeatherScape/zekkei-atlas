@@ -11,6 +11,8 @@ export type TravelMapProps = {
   onSelect: (spot: Spot) => void;
   onReset: () => void;
   mode?: MapViewMode;
+  season?: string;
+  selectedTags?: string[];
   className?: string;
 };
 

@@ -32,12 +32,25 @@ function getDefaultView(mode: MapViewMode): { center: [number, number]; zoom: nu
   return { center: [28, 35], zoom: 2 };
 }
 
-function buildMarkerIcon(L: LeafletModule, selected: boolean) {
+function getSeasonLabel(season?: string) {
+  return season && season !== "all" ? season : "すべての季節";
+}
+
+function getPinTone(photoScore: number) {
+  if (photoScore >= 90) return "high";
+  if (photoScore >= 80) return "mid";
+  return "low";
+}
+
+function buildMarkerIcon(L: LeafletModule, selected: boolean, photoScore: number) {
+  const tone = getPinTone(photoScore);
+  const size = selected ? 36 : tone === "high" ? 28 : tone === "low" ? 20 : 24;
+
   return L.divIcon({
     className: "",
-    html: `<span class="${selected ? "zekkei-map-pin zekkei-map-pin-selected" : "zekkei-map-pin"}"><span></span></span>`,
-    iconSize: selected ? [34, 34] : [24, 24],
-    iconAnchor: selected ? [17, 17] : [12, 12]
+    html: `<span class="zekkei-map-pin zekkei-map-pin-${tone}${selected ? " zekkei-map-pin-selected" : ""}"><span></span></span>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2]
   });
 }
 
@@ -107,12 +120,49 @@ function groupSpotsByScreenDistance(
   return groups;
 }
 
+function distanceKm(a: Spot, b: Spot) {
+  const earthRadius = 6371;
+  const toRad = (value: number) => (value * Math.PI) / 180;
+  const dLat = toRad(b.latitude - a.latitude);
+  const dLng = toRad(b.longitude - a.longitude);
+  const lat1 = toRad(a.latitude);
+  const lat2 = toRad(b.latitude);
+  const h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return earthRadius * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+function getRelatedRouteSpots(selectedSpot: Spot | undefined, spots: Spot[]) {
+  if (!selectedSpot) return [];
+
+  return spots
+    .filter((spot) => spot.id !== selectedSpot.id)
+    .map((spot) => {
+      const sharedTags = spot.tags.filter((tag) => selectedSpot.tags.includes(tag)).length;
+      const sameCountry = spot.country === selectedSpot.country ? 2 : 0;
+      const sameRegion = spot.region === selectedSpot.region ? 2 : 0;
+      const distance = distanceKm(selectedSpot, spot);
+      const distanceScore = distance < 80 ? 4 : distance < 400 ? 3 : distance < 1500 ? 1 : 0;
+
+      return {
+        spot,
+        score: sharedTags * 3 + sameCountry + sameRegion + distanceScore + spot.photoScore / 100
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map((item) => item.spot);
+}
+
 export function LeafletTravelMap({
   spots,
   selectedSpotId,
   onSelect,
   onReset,
   mode = "all",
+  season = "all",
+  selectedTags = [],
   className
 }: TravelMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -220,6 +270,29 @@ export function LeafletTravelMap({
     layer.clearLayers();
     markerRefs.current = {};
     const current = latestRef.current;
+    const currentSelectedSpot = current.spots.find((spot) => spot.id === current.selectedSpotId);
+    const routeSpots = getRelatedRouteSpots(currentSelectedSpot, current.spots);
+
+    if (currentSelectedSpot && routeSpots.length > 0) {
+      routeSpots.forEach((routeSpot) => {
+        const route: Array<[number, number]> = [
+          [currentSelectedSpot.latitude, currentSelectedSpot.longitude],
+          [routeSpot.latitude, routeSpot.longitude]
+        ];
+
+        L.polyline(
+          route,
+          {
+            color: "#67e8f9",
+            weight: 1.8,
+            opacity: 0.34,
+            dashArray: "7 9",
+            interactive: false
+          }
+        ).addTo(layer);
+      });
+    }
+
     const groups = groupSpotsByScreenDistance(map, current.spots, current.selectedSpotId);
 
     groups.forEach((group) => {
@@ -246,7 +319,7 @@ export function LeafletTravelMap({
       group.spots.forEach((spot) => {
         const selected = spot.id === current.selectedSpotId;
         const marker = L.marker([spot.latitude, spot.longitude], {
-          icon: buildMarkerIcon(L, selected),
+          icon: buildMarkerIcon(L, selected, spot.photoScore),
           keyboard: true,
           zIndexOffset: selected ? 1000 : 0
         });
@@ -278,11 +351,31 @@ export function LeafletTravelMap({
       <div ref={mapContainerRef} className="absolute inset-0 z-0" />
 
       <div className="pointer-events-none absolute left-3 top-3 z-[410] max-w-[calc(100%-1.5rem)] rounded-2xl border border-white/[0.14] bg-slate-950/82 px-4 py-3 shadow-glass backdrop-blur-xl md:left-4 md:top-4">
-        <p className="text-xs font-semibold text-white">
-          {spots.length}件のスポットを表示中
+        <p className="text-xs font-semibold text-white md:text-sm">
+          {modeLabels[mode]}
         </p>
-        <p className="mt-1 text-xs text-slate-300">
-          {modeLabels[mode]} / ピンをクリックすると詳細が表示されます
+        <p className="mt-1 text-xs text-cyan-100">
+          {season !== "all" ? `${getSeasonLabel(season)}におすすめの絶景 ${spots.length}件` : `${spots.length}件のスポットを表示中`}
+        </p>
+        {selectedTags.length > 0 ? (
+          <div className="mt-2 flex max-w-[260px] flex-wrap gap-1.5">
+            {selectedTags.slice(0, 4).map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-cyan-200/30 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-semibold text-cyan-50"
+              >
+                #{tag === "島" ? "離島" : tag}
+              </span>
+            ))}
+            {selectedTags.length > 4 ? (
+              <span className="rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[10px] text-slate-300">
+                +{selectedTags.length - 4}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+        <p className="mt-2 text-[11px] text-slate-300">
+          ピンをクリックすると詳細が表示されます
         </p>
       </div>
 

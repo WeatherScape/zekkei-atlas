@@ -115,6 +115,26 @@ textarea {
   width: 24px;
 }
 
+.zekkei-map-pin-high {
+  border-color: rgba(165, 243, 252, 0.96);
+  box-shadow: 0 0 0 5px rgba(103, 232, 249, 0.13), 0 0 24px rgba(103, 232, 249, 0.28), 0 12px 32px rgba(2, 6, 23, 0.48);
+  height: 28px;
+  width: 28px;
+}
+
+.zekkei-map-pin-mid {
+  height: 24px;
+  width: 24px;
+}
+
+.zekkei-map-pin-low {
+  border-color: rgba(125, 211, 252, 0.7);
+  box-shadow: 0 0 0 3px rgba(103, 232, 249, 0.08), 0 10px 28px rgba(2, 6, 23, 0.42);
+  height: 20px;
+  opacity: 0.82;
+  width: 20px;
+}
+
 .zekkei-map-pin > span {
   background: #67e8f9;
   border-radius: 999px;
@@ -127,8 +147,9 @@ textarea {
   background: #67e8f9;
   border-color: #ffffff;
   box-shadow: 0 0 0 7px rgba(103, 232, 249, 0.2), 0 0 34px rgba(103, 232, 249, 0.72), 0 18px 44px rgba(2, 6, 23, 0.5);
-  height: 34px;
-  width: 34px;
+  height: 36px;
+  opacity: 1;
+  width: 36px;
 }
 
 .zekkei-map-pin-selected > span {
