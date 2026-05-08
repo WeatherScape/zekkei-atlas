@@ -29,7 +29,7 @@ import { FilterChip } from "@/components/filter-chip";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { SpotCard } from "@/components/spot-card";
 import { WishlistButton } from "@/components/wishlist-button";
-import { TravelMap } from "@/components/map/TravelMap";
+import { TravelMap, type MapViewMode } from "@/components/map/TravelMap";
 import { budgetLabel, difficultyLabel, isDomestic, normalizeText } from "@/lib/utils";
 
 type ScopeFilter = "all" | "domestic" | "overseas";
@@ -44,6 +44,15 @@ type MapExplorerProps = {
   initialScope?: string;
   initialDifficulty?: string;
 };
+
+const modeOptions: Array<{ value: MapViewMode; label: string; description: string }> = [
+  { value: "all", label: "すべて", description: "全スポット" },
+  { value: "japan", label: "日本", description: "日本列島" },
+  { value: "okinawa", label: "沖縄・離島", description: "南西諸島" },
+  { value: "overseas", label: "海外", description: "海外スポット" }
+];
+
+const islandIds = new Set(["ishigaki", "hateruma", "miyako", "taketomi", "kouri", "yakushima", "okunoshima"]);
 
 function spotMatchesKeyword(spot: Spot, keyword: string) {
   if (!keyword.trim()) return true;
@@ -60,6 +69,13 @@ function spotMatchesKeyword(spot: Spot, keyword: string) {
     ].join(" ")
   );
   return haystack.includes(normalizeText(keyword));
+}
+
+function spotMatchesMode(spot: Spot, mode: MapViewMode) {
+  if (mode === "all") return true;
+  if (mode === "japan") return isDomestic(spot);
+  if (mode === "okinawa") return islandIds.has(spot.id) || spot.region === "沖縄県";
+  return !isDomestic(spot);
 }
 
 function validOrAll(value: string | undefined, options: string[]) {
@@ -88,6 +104,7 @@ export function MapExplorer({
       ? (initialDifficulty as DifficultyFilter)
       : "all"
   );
+  const [mode, setMode] = useState<MapViewMode>("all");
   const [selectedSpotId, setSelectedSpotId] = useState(spots[0].id);
 
   const filteredSpots = useMemo(() => {
@@ -106,14 +123,19 @@ export function MapExplorer({
       .sort((a, b) => b.photoScore - a.photoScore);
   }, [difficulty, keyword, scope, season, selectedTags, style, time]);
 
-  useEffect(() => {
-    if (filteredSpots.length === 0) return;
-    if (!filteredSpots.some((spot) => spot.id === selectedSpotId)) {
-      setSelectedSpotId(filteredSpots[0].id);
-    }
-  }, [filteredSpots, selectedSpotId]);
+  const visibleSpots = useMemo(
+    () => filteredSpots.filter((spot) => spotMatchesMode(spot, mode)),
+    [filteredSpots, mode]
+  );
 
-  const selectedSpot = filteredSpots.find((spot) => spot.id === selectedSpotId) ?? filteredSpots[0];
+  useEffect(() => {
+    if (visibleSpots.length === 0) return;
+    if (!visibleSpots.some((spot) => spot.id === selectedSpotId)) {
+      setSelectedSpotId(visibleSpots[0].id);
+    }
+  }, [selectedSpotId, visibleSpots]);
+
+  const selectedSpot = visibleSpots.find((spot) => spot.id === selectedSpotId) ?? visibleSpots[0];
 
   const activeFilterCount =
     selectedTags.length +
@@ -138,6 +160,7 @@ export function MapExplorer({
     setStyle("all");
     setScope("all");
     setDifficulty("all");
+    setMode("all");
     setSelectedSpotId(spots[0].id);
   };
 
@@ -153,7 +176,8 @@ export function MapExplorer({
       time !== "all" ? `時間帯:${time}` : "",
       style !== "all" ? `スタイル:${style}` : "",
       scope !== "all" ? `範囲:${scope === "domestic" ? "国内" : "海外"}` : "",
-      difficulty !== "all" ? `難易度:${difficultyLabel(difficulty)}` : ""
+      difficulty !== "all" ? `難易度:${difficultyLabel(difficulty)}` : "",
+      mode !== "all" ? `表示:${modeOptions.find((item) => item.value === mode)?.label}` : ""
     ]
       .filter(Boolean)
       .join(" / ")
@@ -163,8 +187,7 @@ export function MapExplorer({
     <main className="min-h-screen bg-atlas-ink text-white">
       <section className="relative overflow-hidden px-4 pb-12 pt-28 md:px-8 md:pt-32">
         <div className="absolute inset-0 bg-night-rim" />
-        <div className="absolute inset-0 bg-atlas-grid bg-[length:72px_72px] opacity-25" />
-        <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_50%_0%,rgba(103,232,249,.20),transparent_48%)]" />
+        <div className="absolute inset-0 bg-atlas-grid bg-[length:72px_72px] opacity-20" />
 
         <div className="relative mx-auto max-w-[1480px]">
           <div className="mb-7 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
@@ -190,7 +213,7 @@ export function MapExplorer({
 
           <form
             onSubmit={handleSearch}
-            className="mb-5 grid gap-3 rounded-[30px] border border-white/[0.12] bg-white/[0.07] p-3 shadow-glass backdrop-blur-2xl lg:grid-cols-[1fr_auto_auto]"
+            className="mb-4 grid gap-3 rounded-[30px] border border-white/[0.12] bg-white/[0.07] p-3 shadow-glass backdrop-blur-2xl lg:grid-cols-[1fr_auto_auto]"
           >
             <label className="flex h-14 min-h-14 items-center gap-3 rounded-2xl bg-slate-950/50 px-4">
               <Search className="h-5 w-5 text-cyan-100" />
@@ -210,8 +233,26 @@ export function MapExplorer({
             </Button>
           </form>
 
+          <div className="mb-5 flex gap-2 overflow-x-auto pb-2">
+            {modeOptions.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => setMode(item.value)}
+                className={
+                  mode === item.value
+                    ? "shrink-0 rounded-full border border-cyan-200 bg-cyan-200 px-4 py-2 text-sm font-semibold text-slate-950"
+                    : "shrink-0 rounded-full border border-white/[0.12] bg-white/[0.06] px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-200/40 hover:bg-cyan-200/10"
+                }
+              >
+                {item.label}
+                <span className="ml-2 text-xs opacity-70">{item.description}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="mb-5 flex gap-2 overflow-x-auto pb-2 xl:hidden">
-            {[...popularMobileFilters()].map((item) => (
+            {popularMobileFilters().map((item) => (
               <FilterChip
                 key={item}
                 label={item}
@@ -252,11 +293,7 @@ export function MapExplorer({
                 </FilterGroup>
 
                 <FilterGroup title="季節">
-                  <ChipRow
-                    value={season}
-                    options={seasonOptions}
-                    onChange={(value) => setSeason(value)}
-                  />
+                  <ChipRow value={season} options={seasonOptions} onChange={(value) => setSeason(value)} />
                 </FilterGroup>
 
                 <FilterGroup title="時間帯">
@@ -264,11 +301,7 @@ export function MapExplorer({
                 </FilterGroup>
 
                 <FilterGroup title="旅行スタイル">
-                  <ChipRow
-                    value={style}
-                    options={travelStyleOptions}
-                    onChange={(value) => setStyle(value)}
-                  />
+                  <ChipRow value={style} options={travelStyleOptions} onChange={(value) => setStyle(value)} />
                 </FilterGroup>
 
                 <FilterGroup title="国内 / 海外">
@@ -313,13 +346,15 @@ export function MapExplorer({
                 <div>
                   <p className="flex items-center gap-2 text-sm text-cyan-100">
                     <Filter className="h-4 w-4" />
-                    {filteredSpots.length} spots matched
+                    {visibleSpots.length}件を表示中
+                    <span className="text-slate-500">/ フィルター一致 {filteredSpots.length}件</span>
                   </p>
                   <p className="mt-1 text-xs text-slate-400">
-                    ピン、カード、詳細パネルが連動します。密集エリアはクラスタで整理しています。
+                    地図はドラッグ・ズームできます。ピンをクリックすると詳細が切り替わります。
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <Badge>{modeOptions.find((item) => item.value === mode)?.label}</Badge>
                   {selectedTags.slice(0, 4).map((tag) => (
                     <Badge key={tag}>#{tag}</Badge>
                   ))}
@@ -330,14 +365,15 @@ export function MapExplorer({
               </div>
 
               <TravelMap
-                spots={filteredSpots}
+                spots={visibleSpots}
                 selectedSpotId={selectedSpot?.id}
                 onSelect={(spot) => setSelectedSpotId(spot.id)}
                 onReset={resetFilters}
+                mode={mode}
               />
 
               <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-                {filteredSpots.map((spot) => (
+                {visibleSpots.map((spot) => (
                   <SpotCard
                     key={spot.id}
                     spot={spot}
@@ -352,12 +388,11 @@ export function MapExplorer({
             <GlassPanel className="xl:sticky xl:top-28 xl:h-[calc(100vh-8rem)] xl:overflow-y-auto">
               {selectedSpot ? (
                 <div className="p-5">
+                  <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
+                    選択中
+                  </Badge>
                   <div className="relative overflow-hidden rounded-[24px]">
-                    <img
-                      src={selectedSpot.image}
-                      alt={selectedSpot.name}
-                      className="h-64 w-full object-cover"
-                    />
+                    <img src={selectedSpot.image} alt={selectedSpot.name} className="h-64 w-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/86 via-slate-950/20 to-transparent" />
                     <div className="absolute bottom-4 left-4 right-4">
                       <p className="flex items-center gap-1.5 text-xs text-cyan-100">
@@ -385,23 +420,9 @@ export function MapExplorer({
                     <InfoCard label="Duration" value={selectedSpot.duration} />
                   </div>
 
-                  <div className="mt-6 space-y-3">
-                    {selectedSpot.highlights.map((highlight) => (
-                      <div
-                        key={highlight}
-                        className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm text-slate-200"
-                      >
-                        {highlight}
-                      </div>
-                    ))}
-                  </div>
-
                   <div className="mt-6 grid gap-3">
                     <WishlistButton spotId={selectedSpot.id} className="w-full" />
-                    <Link
-                      href={`/spots/${selectedSpot.id}`}
-                      className={buttonVariants({ variant: "primary", size: "md", className: "w-full" })}
-                    >
+                    <Link href={`/spots/${selectedSpot.id}`} className={buttonVariants({ variant: "primary", size: "md", className: "w-full" })}>
                       詳細を見る
                       <ArrowRight className="h-4 w-4" />
                     </Link>
@@ -417,7 +438,7 @@ export function MapExplorer({
               ) : (
                 <div className="p-8 text-center text-slate-400">
                   <Bot className="mx-auto mb-3 h-8 w-8 text-cyan-100" />
-                  スポットを選択してください。
+                  条件に合うスポットがありません。
                 </div>
               )}
             </GlassPanel>
@@ -474,15 +495,7 @@ function ChipRow({
   );
 }
 
-function InfoCard({
-  label,
-  value,
-  icon
-}: {
-  label: string;
-  value: string;
-  icon?: ReactNode;
-}) {
+function InfoCard({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-4">
       <p className="flex items-center gap-1.5 text-xs text-slate-400">
