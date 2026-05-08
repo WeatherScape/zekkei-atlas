@@ -1,10 +1,15 @@
-import { Suspense } from "react";
 import { AiPlannerPage } from "@/components/ai-planner-page";
 
-export default function Page() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-atlas-ink" />}>
-      <AiPlannerPage />
-    </Suspense>
-  );
+type AiPlannerRouteProps = {
+  searchParams?: {
+    prompt?: string | string[];
+  };
+};
+
+export default function Page({ searchParams }: AiPlannerRouteProps) {
+  const prompt = Array.isArray(searchParams?.prompt)
+    ? searchParams?.prompt[0] ?? ""
+    : searchParams?.prompt ?? "";
+
+  return <AiPlannerPage initialPrompt={prompt} />;
 }

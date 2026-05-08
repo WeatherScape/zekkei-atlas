@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   Bot,
@@ -51,27 +50,43 @@ function spotMatchesKeyword(spot: Spot, keyword: string) {
   return haystack.includes(normalizeText(keyword));
 }
 
-export function MapExplorer() {
-  const searchParams = useSearchParams();
-  const queryString = searchParams.toString();
-  const [keyword, setKeyword] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [season, setSeason] = useState("all");
-  const [time, setTime] = useState("all");
-  const [style, setStyle] = useState("all");
-  const [scope, setScope] = useState<ScopeFilter>("all");
-  const [difficulty, setDifficulty] = useState<DifficultyFilter>("all");
-  const [selectedSpotId, setSelectedSpotId] = useState(spots[0].id);
+type MapExplorerProps = {
+  initialSearch?: string;
+  initialTag?: string;
+  initialStyle?: string;
+  initialSeason?: string;
+  initialTime?: string;
+  initialScope?: string;
+  initialDifficulty?: string;
+};
 
-  useEffect(() => {
-    const params = new URLSearchParams(queryString);
-    const q = params.get("q");
-    const tag = params.get("tag");
-    const styleParam = params.get("style");
-    if (q) setKeyword(q);
-    if (tag) setSelectedTags([tag]);
-    if (styleParam) setStyle(styleParam);
-  }, [queryString]);
+function validOrAll(value: string | undefined, options: string[]) {
+  return value && options.includes(value) ? value : "all";
+}
+
+export function MapExplorer({
+  initialSearch = "",
+  initialTag = "",
+  initialStyle = "",
+  initialSeason = "",
+  initialTime = "",
+  initialScope = "",
+  initialDifficulty = ""
+}: MapExplorerProps) {
+  const [keyword, setKeyword] = useState(initialSearch);
+  const [selectedTags, setSelectedTags] = useState<string[]>(initialTag ? [initialTag] : []);
+  const [season, setSeason] = useState(validOrAll(initialSeason, seasonOptions));
+  const [time, setTime] = useState(validOrAll(initialTime, timeOptions));
+  const [style, setStyle] = useState(validOrAll(initialStyle, travelStyleOptions));
+  const [scope, setScope] = useState<ScopeFilter>(
+    ["all", "domestic", "overseas"].includes(initialScope) ? (initialScope as ScopeFilter) : "all"
+  );
+  const [difficulty, setDifficulty] = useState<DifficultyFilter>(
+    ["all", "easy", "normal", "hard"].includes(initialDifficulty)
+      ? (initialDifficulty as DifficultyFilter)
+      : "all"
+  );
+  const [selectedSpotId, setSelectedSpotId] = useState(spots[0].id);
 
   const filteredSpots = useMemo(() => {
     return spots
@@ -115,6 +130,10 @@ export function MapExplorer() {
     setSelectedSpotId(spots[0].id);
   };
 
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+  };
+
   const aiPrompt = encodeURIComponent(
     [
       keyword ? `キーワード:${keyword}` : "",
@@ -138,13 +157,13 @@ export function MapExplorer() {
           <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
               <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
-                ZEKKEI Map Explorer
+                ZEKKEI ATLAS
               </Badge>
               <h1 className="text-balance text-4xl font-semibold tracking-normal md:text-6xl">
-                絶景を、条件と地図で絞り込む。
+                Map Discovery
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
-                季節、時間帯、同行者、移動手段、写真映えを重ねて、今の旅に合う場所だけを残します。
+                季節、時間、旅のスタイルから、次の絶景を地図で探す。
               </p>
             </div>
             <Link
@@ -154,6 +173,48 @@ export function MapExplorer() {
               <Sparkles className="h-5 w-5" />
               AIにこの条件で聞く
             </Link>
+          </div>
+
+          <form
+            onSubmit={handleSearch}
+            className="mb-5 flex flex-col gap-3 rounded-[28px] border border-white/[0.12] bg-white/[0.07] p-3 shadow-glass backdrop-blur-2xl md:flex-row md:items-center"
+          >
+            <label className="flex h-14 min-h-14 flex-1 items-center gap-3 rounded-2xl bg-slate-950/50 px-4">
+              <Search className="h-5 w-5 text-cyan-100" />
+              <input
+                value={keyword}
+                onChange={(event) => setKeyword(event.target.value)}
+                placeholder="星空、海、紅葉、車なし、週末旅..."
+                className="h-12 w-full bg-transparent text-base text-white outline-none placeholder:text-slate-500"
+              />
+            </label>
+            <Button type="submit" variant="primary" size="lg">
+              検索
+            </Button>
+            <Button type="button" variant="secondary" size="lg" onClick={resetFilters}>
+              <RotateCcw className="h-5 w-5" />
+              リセット
+            </Button>
+          </form>
+
+          <div className="mb-5 flex gap-2 overflow-x-auto pb-2 xl:hidden">
+            {[...allTags.slice(0, 12), ...seasonOptions, ...travelStyleOptions.slice(0, 4)].map((item) => (
+              <FilterChip
+                key={item}
+                label={item}
+                active={
+                  selectedTags.includes(item) ||
+                  season === item ||
+                  style === item
+                }
+                onClick={() => {
+                  if (seasonOptions.includes(item)) setSeason(season === item ? "all" : item);
+                  else if (travelStyleOptions.includes(item)) setStyle(style === item ? "all" : item);
+                  else toggleTag(item);
+                }}
+                className="shrink-0"
+              />
+            ))}
           </div>
 
           <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)_360px]">
@@ -264,9 +325,7 @@ export function MapExplorer() {
                     <Filter className="h-4 w-4" />
                     {filteredSpots.length} spots matched
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    ピンまたはカードを選ぶと詳細が更新されます。
-                  </p>
+                  <p className="mt-1 text-xs text-slate-400">ピンまたはカードを選ぶと詳細が更新されます。</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {selectedTags.map((tag) => (

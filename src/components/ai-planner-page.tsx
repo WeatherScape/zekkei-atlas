@@ -1,8 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   Bot,
@@ -11,51 +10,35 @@ import {
   Coins,
   Loader2,
   Luggage,
+  Map,
   MapPin,
   ShieldAlert,
   Sparkles
 } from "lucide-react";
-import { seasonOptions, spots, Spot } from "@/data/spots";
+import { seasonOptions, spots } from "@/data/spots";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { WishlistButton } from "@/components/wishlist-button";
-import { budgetLabel, scoreSpotForPlanner } from "@/lib/utils";
+import {
+  generateTravelPlan,
+  type TravelPlan,
+  type TravelPlanInput
+} from "@/lib/generateTravelPlan";
 
-type PlannerResult = {
-  recommendations: Spot[];
-  reason: string;
-  itinerary: Array<{ day: string; title: string; detail: string }>;
-  photoTime: string;
-  caution: string[];
-  budget: string;
-  packing: string[];
-};
-
-export function AiPlannerPage() {
-  const searchParams = useSearchParams();
-  const queryString = searchParams.toString();
+export function AiPlannerPage({ initialPrompt = "" }: { initialPrompt?: string }) {
   const [departure, setDeparture] = useState("広島");
   const [days, setDays] = useState("2泊3日");
-  const [budget, setBudget] = useState("20万円以内");
+  const [budget, setBudget] = useState("6万円〜12万円");
   const [companion, setCompanion] = useState("彼女");
-  const [scenery, setScenery] = useState("海、星空、夕日");
+  const [scenery, setScenery] = useState(initialPrompt || "海、星空、夕日");
   const [season, setSeason] = useState("夏");
   const [transport, setTransport] = useState("飛行機・レンタカー");
-  const [mood, setMood] = useState("特別感重視");
+  const [mood, setMood] = useState(initialPrompt.includes("一生") ? "一生に一度の特別感" : "特別感重視");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [result, setResult] = useState<PlannerResult | null>(null);
+  const [result, setResult] = useState<TravelPlan | null>(null);
 
-  useEffect(() => {
-    const params = new URLSearchParams(queryString);
-    const prompt = params.get("prompt");
-    if (prompt) {
-      setScenery(prompt);
-      setMood(prompt.includes("一生") ? "一生に一度の特別感" : "写真映え重視");
-    }
-  }, [queryString]);
-
-  const context = useMemo(
+  const input = useMemo<TravelPlanInput>(
     () => ({ departure, days, budget, companion, scenery, season, transport, mood }),
     [budget, companion, days, departure, mood, scenery, season, transport]
   );
@@ -64,7 +47,7 @@ export function AiPlannerPage() {
     event.preventDefault();
     setIsGenerating(true);
     window.setTimeout(() => {
-      setResult(generatePlannerResult(context));
+      setResult(generateTravelPlan(input));
       setIsGenerating(false);
     }, 650);
   };
@@ -75,16 +58,22 @@ export function AiPlannerPage() {
         <div className="absolute inset-0 bg-night-rim" />
         <div className="absolute inset-0 bg-atlas-grid bg-[length:72px_72px] opacity-30" />
         <div className="relative mx-auto max-w-7xl">
-          <div className="mb-10 max-w-4xl">
-            <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
-              AI Travel Planner
-            </Badge>
-            <h1 className="text-balance text-4xl font-semibold tracking-normal md:text-6xl">
-              条件を入れるだけで、絶景旅の候補と旅程を生成。
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
-              外部AI APIなしのモック生成ですが、ローカルの絶景データを条件でスコアリングして、旅の提案として読める形に整えます。
-            </p>
+          <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-4xl">
+              <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
+                ZEKKEI Concierge
+              </Badge>
+              <h1 className="text-balance text-4xl font-semibold tracking-normal md:text-6xl">
+                AI Travel Planner
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
+                行きたい景色と旅の気分から、次の絶景プランを提案します。
+              </p>
+            </div>
+            <Link href="/map" className={buttonVariants({ variant: "secondary", size: "lg" })}>
+              <Map className="h-5 w-5" />
+              地図で探す
+            </Link>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[420px_minmax(0,1fr)]">
@@ -103,14 +92,14 @@ export function AiPlannerPage() {
                 <Field label="出発地" value={departure} onChange={setDeparture} placeholder="広島" />
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="日数" value={days} onChange={setDays} placeholder="2泊3日" />
-                  <Field label="予算" value={budget} onChange={setBudget} placeholder="20万円以内" />
+                  <Field label="予算" value={budget} onChange={setBudget} placeholder="6万円〜12万円" />
                 </div>
                 <Field label="同行者" value={companion} onChange={setCompanion} placeholder="彼女 / 友人 / ひとり" />
                 <Field label="見たい景色" value={scenery} onChange={setScenery} placeholder="海、星空、夕日" />
                 <div className="grid grid-cols-2 gap-3">
                   <label className="space-y-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      季節
+                      行きたい季節
                     </span>
                     <select
                       value={season}
@@ -124,7 +113,7 @@ export function AiPlannerPage() {
                   </label>
                   <Field label="移動手段" value={transport} onChange={setTransport} placeholder="飛行機・レンタカー" />
                 </div>
-                <Field label="旅行のテンション" value={mood} onChange={setMood} placeholder="特別感重視" />
+                <Field label="旅のテンション" value={mood} onChange={setMood} placeholder="特別感重視" />
 
                 <Button type="submit" className="w-full" size="lg" disabled={isGenerating}>
                   {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
@@ -135,16 +124,16 @@ export function AiPlannerPage() {
 
             <div className="space-y-6">
               {result ? (
-                <PlannerResultView result={result} context={context} />
+                <PlannerResultView result={result} input={input} />
               ) : (
                 <GlassPanel className="flex min-h-[620px] flex-col justify-between overflow-hidden p-7">
                   <div>
                     <Badge className="mb-5 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
                       Mock AI Output
                     </Badge>
-                    <h2 className="text-3xl font-semibold">条件をもとに、絶景候補を組み立てます。</h2>
+                    <h2 className="text-3xl font-semibold">条件を入れると、旅程と候補地を生成します。</h2>
                     <p className="mt-4 max-w-2xl leading-8 text-slate-300">
-                      例の条件なら、海・星空・夕日・カップル旅・夏を重視して、離島系スポットを高く評価します。
+                      海 + 星空 + 夏なら波照間島、海外 + 一生に一度ならウユニ塩湖など、ローカルデータをスコアリングして提案します。
                     </p>
                   </div>
                   <div className="grid gap-4 md:grid-cols-3">
@@ -192,22 +181,7 @@ function Field({
   );
 }
 
-function PlannerResultView({
-  result,
-  context
-}: {
-  result: PlannerResult;
-  context: {
-    departure: string;
-    days: string;
-    budget: string;
-    companion: string;
-    scenery: string;
-    season: string;
-    transport: string;
-    mood: string;
-  };
-}) {
+function PlannerResultView({ result, input }: { result: TravelPlan; input: TravelPlanInput }) {
   const top = result.recommendations[0];
 
   return (
@@ -259,7 +233,7 @@ function PlannerResultView({
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <GlassPanel className="p-6 md:p-8">
-          <h2 className="text-3xl font-semibold">{context.days}プラン</h2>
+          <h2 className="text-3xl font-semibold">{input.days}プラン</h2>
           <div className="mt-6 space-y-4">
             {result.itinerary.map((item) => (
               <div key={item.day} className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
@@ -301,72 +275,4 @@ function SideInfo({ icon, title, items }: { icon: React.ReactNode; title: string
       </div>
     </GlassPanel>
   );
-}
-
-function generatePlannerResult(context: {
-  departure: string;
-  days: string;
-  budget: string;
-  companion: string;
-  scenery: string;
-  season: string;
-  transport: string;
-  mood: string;
-}): PlannerResult {
-  const recommendations = [...spots]
-    .map((spot) => ({
-      spot,
-      score: scoreSpotForPlanner(spot, {
-        scenery: context.scenery,
-        season: context.season,
-        companion: context.companion,
-        transport: context.transport,
-        mood: context.mood
-      })
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
-    .map(({ spot }) => spot);
-
-  const top = recommendations[0];
-  const second = recommendations[1];
-
-  return {
-    recommendations,
-    reason: `${top.name}は「${context.scenery}」と「${context.mood}」の相性が高く、${context.season}に${top.bestTime.join("・")}の景色を狙いやすい候補です。${context.companion}との旅でも移動と滞在のバランスが取りやすく、写真映えスコアも${top.photoScore}/100と強いです。`,
-    itinerary: [
-      {
-        day: "Day 1",
-        title: `${context.departure}から移動、夕方の光を狙う`,
-        detail: `${context.transport}で${top.region}へ。到着後は${top.highlights[0]}を軽めに下見し、夕方から夜にかけて旅の導入になる写真を撮ります。`
-      },
-      {
-        day: "Day 2",
-        title: `${top.name}を中心にメイン絶景へ`,
-        detail: `${top.highlights.slice(0, 2).join("、")}を軸に、日中はアクティビティ、夜は${top.tags.includes("星空") ? "星空" : "静かな夜景"}の時間を確保します。`
-      },
-      {
-        day: "Day 3",
-        title: `${second.name}を軽く組み合わせて帰路へ`,
-        detail: `朝の時間に${top.bestTime.includes("朝") || top.bestTime.includes("早朝") ? "もう一度撮影" : "カフェと散策"}を入れ、余裕があれば${second.name}の雰囲気も味わって帰ります。`
-      }
-    ],
-    photoTime: `${top.bestTime.join(" / ")}。特に${top.bestTime[0]}は人が少なく、光の方向も読みやすい時間帯です。`,
-    caution: [
-      `${top.tips[0]}`,
-      top.country !== "日本" ? "パスポート、海外保険、通信手段を事前に確認してください。" : "天候で見え方が大きく変わるため、代替スポットを1つ持っておくと安心です。",
-      top.difficulty === "hard" ? "体力と装備に余裕を持ち、無理な行程にしないでください。" : "人気時間帯は混みやすいため、撮影場所は少し早めに到着してください。"
-    ],
-    budget: `${context.budget}を目安に、${budgetLabel(top.budgetLevel)}帯。移動費と宿泊費を先に押さえると計画しやすいです。`,
-    packing: Array.from(
-      new Set([
-        "モバイルバッテリー",
-        "歩きやすい靴",
-        "カメラ用予備バッテリー",
-        top.tags.includes("海") ? "日焼け止め" : "薄手の羽織り",
-        top.tags.includes("星空") ? "三脚" : "小さめのデイバッグ",
-        top.difficulty === "hard" ? "レインウェア" : "折りたたみ傘"
-      ])
-    )
-  };
 }
