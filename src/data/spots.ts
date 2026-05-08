@@ -31,7 +31,7 @@ export const spots: Spot[] = [
     description:
       "透明度の高い海、サンゴ礁、夕日、星空まで一度に味わえる南国の絶景拠点。離島巡りの起点としても旅の自由度が高い。",
     image:
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Kabira%20Bay%20Ishigaki%20Island21bs5s4410.jpg?width=1600",
     latitude: 24.4064,
     longitude: 124.1754,
     tags: ["海", "星空", "島", "夕日", "夏", "カップル"],
@@ -53,7 +53,7 @@ export const spots: Spot[] = [
     description:
       "日本最南端の有人島。ニシ浜の青と、南十字星を望めるほど暗い夜空が重なる、特別感の強い離島体験。",
     image:
-      "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Hateruma%20nishihama%201.jpg?width=1600",
     latitude: 24.0589,
     longitude: 123.8056,
     tags: ["海", "星空", "秘境", "島", "一生に一度"],
@@ -75,7 +75,7 @@ export const spots: Spot[] = [
     description:
       "橋でつながる島々と、透き通る宮古ブルー。ドライブしながら複数のビーチを巡れる、海好きのための絶景アイランド。",
     image:
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Yonahamaehama%20Miyakojima%20Okinawa%20Japan02bs3s4592.jpg?width=1600",
     latitude: 24.8056,
     longitude: 125.2811,
     tags: ["海", "島", "ドライブ", "朝日", "カップル"],
@@ -97,7 +97,7 @@ export const spots: Spot[] = [
     description:
       "赤瓦の集落、白砂の道、コンドイ浜の遠浅の海。小さな島に沖縄らしい時間が凝縮された、ゆったり系の絶景。",
     image:
-      "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Village%20in%20Taketomi%20Island%20-%20located%20at%20southwest%20Japan.jpg?width=1600",
     latitude: 24.3267,
     longitude: 124.0853,
     tags: ["海", "島", "週末旅", "写真映え", "カップル"],
@@ -119,7 +119,7 @@ export const spots: Spot[] = [
     description:
       "古宇利大橋を渡る瞬間に広がる海のグラデーションが印象的。本島旅に組み込みやすい、ドライブ向けの絶景。",
     image:
-      "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Nago%20Okinawa%20Kouri-Bridge-01.jpg?width=1600",
     latitude: 26.7044,
     longitude: 128.0177,
     tags: ["海", "ドライブ", "夕日", "週末旅"],
@@ -141,7 +141,7 @@ export const spots: Spot[] = [
     description:
       "コバルトブルーの海へ一直線に伸びる橋。西日本屈指のドライブ絶景として、短い旅でも強い記憶を残す。",
     image:
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Tsunoshima%20Ohashi%20Bridge.jpg?width=1600",
     latitude: 34.347,
     longitude: 130.878,
     tags: ["海", "ドライブ", "週末旅", "写真映え"],
@@ -163,7 +163,7 @@ export const spots: Spot[] = [
     description:
       "瀬戸内の島々を橋でつなぐ絶景ルート。海、島影、夕日を浴びる橋が重なり、移動そのものが目的になる。",
     image:
-      "https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Setouchi%20Shimanami%20Kaido%20Expressway%20in%20summer%2C%20Ehime002.jpg?width=1600",
     latitude: 34.2608,
     longitude: 133.0806,
     tags: ["海", "島", "ドライブ", "夕日", "アクティビティ"],
@@ -185,7 +185,7 @@ export const spots: Spot[] = [
     description:
       "瀬戸内海に浮かぶ小さな島。穏やかな海と廃墟の気配、夕暮れの桟橋が独特の旅情をつくる。",
     image:
-      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Okunoshima%202.JPG?width=1600",
     latitude: 34.3092,
     longitude: 132.9933,
     tags: ["島", "夕日", "週末旅", "秘境"],
@@ -207,7 +207,7 @@ export const spots: Spot[] = [
     description:
       "日本海を背景に広がる砂の稜線。風紋、夕日、星空が異世界のような表情を見せる、国内でも非日常な景観。",
     image:
-      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Tottori-Sakyu%20Tottori%20Japan.JPG?width=1600",
     latitude: 35.5396,
     longitude: 134.2289,
     tags: ["砂丘", "夕日", "星空", "週末旅", "写真映え"],
@@ -229,7 +229,7 @@ export const spots: Spot[] = [
     description:
       "外輪山と草千里がつくる雄大なスケール。雲海、ドライブ、火山景観が重なり、九州らしい大地の力を感じられる。",
     image:
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Aso%20Kusasenri%20horses%20(52133462269).jpg?width=1600",
     latitude: 32.8844,
     longitude: 131.1046,
     tags: ["雲海", "ドライブ", "朝日", "山", "一生に一度"],
@@ -251,7 +251,7 @@ export const spots: Spot[] = [
     description:
       "澄んだ梓川と北アルプスの稜線が織りなす山岳リゾート。歩くだけで名画の中に入るような清涼感がある。",
     image:
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/150920%20Kappa-bashi%20Kamikochi%20Japan01n.jpg?width=1600",
     latitude: 36.2464,
     longitude: 137.6386,
     tags: ["山", "新緑", "紅葉", "朝日", "写真映え"],
@@ -273,7 +273,7 @@ export const spots: Spot[] = [
     description:
       "合掌造りの集落が四季で表情を変える世界遺産。冬の雪景色は物語の中の村のような静けさをまとっている。",
     image:
-      "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Shirakawa-go%2020170202-2.jpg?width=1600",
     latitude: 36.2579,
     longitude: 136.9067,
     tags: ["雪", "紅葉", "世界遺産", "週末旅"],
@@ -295,7 +295,7 @@ export const spots: Spot[] = [
     description:
       "丘陵とパッチワークの畑、青い池、雪原が季節ごとに別の顔を見せる。北海道らしい広さを静かに味わえる場所。",
     image:
-      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Blue%20Pond%20(Aoiike)%20at%20Biei%2C%20Hokkaido%2C%20Japan.jpg?width=1600",
     latitude: 43.5883,
     longitude: 142.4667,
     tags: ["雪", "花畑", "新緑", "ドライブ", "写真映え"],
@@ -317,7 +317,7 @@ export const spots: Spot[] = [
     description:
       "湖面越しの富士山、逆さ富士、朝焼け、星空まで狙える王道絶景。季節と時間帯で何度でも違う一枚になる。",
     image:
-      "https://images.unsplash.com/photo-1570459027562-4a916cc6113f?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Mount%20Fuji%20from%20Lake%20Kawaguchi%2020170206.jpg?width=1600",
     latitude: 35.5013,
     longitude: 138.7654,
     tags: ["富士山", "朝日", "星空", "紅葉", "週末旅"],
@@ -339,7 +339,7 @@ export const spots: Spot[] = [
     description:
       "苔むす森、巨木、滝、海が同居する生命力の島。天気すら演出に変わる、自然没入型の旅に向いている。",
     image:
-      "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Shiratani%20Unsui%20Gorge%2018.jpg?width=1600",
     latitude: 30.3586,
     longitude: 130.5289,
     tags: ["森", "滝", "秘境", "一生に一度", "アクティビティ"],
@@ -383,7 +383,7 @@ export const spots: Spot[] = [
     description:
       "滝、氷河、黒砂海岸、オーロラが短い移動範囲で連続する自然のショーケース。冬旅の非日常感が抜群。",
     image:
-      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Seljalandsfoss%20Waterfall%2C%20Iceland%2C%2020240720%201500%203096.jpg?width=1600",
     latitude: 64.9631,
     longitude: -19.0208,
     tags: ["海外旅行", "滝", "雪", "オーロラ", "一生に一度"],
@@ -471,7 +471,7 @@ export const spots: Spot[] = [
     description:
       "雪原、針葉樹、ガラスイグルー、オーロラが重なる冬の夢のような目的地。静かな特別感を求める旅に合う。",
     image:
-      "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Aurora%20swirl%20over%20Levi%2C%20Kittil%C3%A4%2C%20Lapland%2C%20Finland%2C%202023%20September.jpg?width=1600",
     latitude: 66.5039,
     longitude: 25.7294,
     tags: ["海外旅行", "雪", "オーロラ", "カップル", "一生に一度"],
@@ -493,7 +493,7 @@ export const spots: Spot[] = [
     description:
       "エメラルド色の湖とロッキー山脈が広がる北米屈指の自然景観。湖畔の朝と山岳ドライブが特に美しい。",
     image:
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Lake%20Moraine-Banff%20National%20Park.jpg?width=1600",
     latitude: 51.4968,
     longitude: -115.9281,
     tags: ["海外旅行", "山", "湖", "朝日", "ドライブ"],
