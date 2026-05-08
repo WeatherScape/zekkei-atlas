@@ -361,7 +361,7 @@ export const spots: Spot[] = [
     description:
       "雨季には空と大地の境界が消える、世界屈指の一生に一度の絶景。星空と朝焼けのリフレクションが圧倒的。",
     image:
-      "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1600&q=85",
+      "https://images.unsplash.com/photo-1667759316727-dc5ff7ad2437?auto=format&fit=crop&w=1600&q=85",
     latitude: -20.1338,
     longitude: -67.4891,
     tags: ["海外旅行", "星空", "朝日", "一生に一度", "写真映え"],
