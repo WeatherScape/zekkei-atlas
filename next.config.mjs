@@ -1,6 +1,9 @@
-import type { NextConfig } from "next";
+// @ts-check
 
-const nextConfig: NextConfig = {
+/**
+ * @type {import('next').NextConfig}
+ */
+const nextConfig = {
   reactStrictMode: true,
   eslint: {
     ignoreDuringBuilds: true
