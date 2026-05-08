@@ -102,6 +102,9 @@ export function MockMap({
       <div className="absolute left-0 right-0 top-1/2 h-px bg-cyan-100/[0.12]" />
       <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-100/45">
         <span>Curated Atlas</span>
+        <span className="rounded-full border border-cyan-200/25 bg-cyan-200/[0.10] px-3 py-1 text-cyan-50">
+          Map v2
+        </span>
         <span>AI Scenic Layer</span>
       </div>
 

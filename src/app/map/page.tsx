@@ -1,5 +1,8 @@
 import { MapExplorer } from "@/components/map-explorer";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type MapPageProps = {
   searchParams?: {
     search?: string | string[];
