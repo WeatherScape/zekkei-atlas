@@ -19,16 +19,12 @@ import {
   Trees,
   Waves
 } from "lucide-react";
-import {
-  popularTags,
-  seasonOptions,
-  spots
-} from "@/data/spots";
+import { popularTags, seasonOptions, spots } from "@/data/spots";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { FilterChip } from "@/components/filter-chip";
-import { MockMap } from "@/components/mock-map";
+import { TravelMap } from "@/components/map/TravelMap";
 import { SectionHeading } from "@/components/section-heading";
 import { SpotCard } from "@/components/spot-card";
 import { WishlistButton } from "@/components/wishlist-button";
@@ -60,7 +56,7 @@ export function HomePage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedSeason, setSelectedSeason] = useState("夏");
-  const [selectedMapSpot, setSelectedMapSpot] = useState(spots[1]);
+  const [selectedMapSpot, setSelectedMapSpot] = useState(featured[0]);
 
   const seasonalSpots = useMemo(
     () =>
@@ -124,14 +120,7 @@ export function HomePage() {
               />
             </label>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/ai-planner"
-                className={buttonVariants({
-                  variant: "primary",
-                  size: "lg",
-                  className: "w-full sm:w-auto"
-                })}
-              >
+              <Link href="/ai-planner" className={buttonVariants({ variant: "primary", size: "lg", className: "w-full sm:w-auto" })}>
                 <Sparkles className="h-5 w-5" />
                 AIに旅先を提案
               </Link>
@@ -178,7 +167,7 @@ export function HomePage() {
               </div>
             </div>
             <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-cyan-200/40 bg-cyan-200/[0.15]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-cyan-200/40 bg-cyan-200/[0.15]">
                 <Bot className="h-5 w-5 text-cyan-100" />
               </div>
               <div className="rounded-3xl rounded-tl-sm border border-cyan-200/20 bg-cyan-200/10 px-5 py-4 text-sm leading-7 text-cyan-50">
@@ -186,15 +175,7 @@ export function HomePage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2 pt-2">
-              {[
-                "彼女と行く絶景",
-                "夏の海",
-                "星空が見える場所",
-                "車なしで行ける場所",
-                "2泊3日で行ける場所",
-                "写真映え重視",
-                "一生に一度の絶景"
-              ].map((chip) => (
+              {["彼女と行く絶景", "夏の海", "星空が見える場所", "車なしで行ける場所", "2泊3日で行ける場所", "写真映え重視", "一生に一度の絶景"].map((chip) => (
                 <Link
                   key={chip}
                   href={`/ai-planner?prompt=${encodeURIComponent(chip)}`}
@@ -235,10 +216,12 @@ export function HomePage() {
             description="ピンを押すと、絶景の季節、時間帯、旅のしやすさがすぐに切り替わります。"
           />
           <div className="mt-8">
-            <MockMap
+            <TravelMap
               spots={featured}
               selectedSpotId={selectedMapSpot.id}
               onSelect={setSelectedMapSpot}
+              onReset={() => setSelectedMapSpot(featured[0])}
+              className="min-h-[520px]"
             />
           </div>
         </div>
@@ -260,29 +243,14 @@ export function HomePage() {
             </p>
             <p className="mt-4 leading-7 text-slate-300">{selectedMapSpot.description}</p>
             <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-2xl bg-white/[0.06] p-4">
-                <p className="text-slate-400">Season</p>
-                <p className="mt-1 font-medium text-white">{selectedMapSpot.bestSeason.join(" / ")}</p>
-              </div>
-              <div className="rounded-2xl bg-white/[0.06] p-4">
-                <p className="text-slate-400">Time</p>
-                <p className="mt-1 font-medium text-white">{selectedMapSpot.bestTime.join(" / ")}</p>
-              </div>
-              <div className="rounded-2xl bg-white/[0.06] p-4">
-                <p className="text-slate-400">Difficulty</p>
-                <p className="mt-1 font-medium text-white">{difficultyLabel(selectedMapSpot.difficulty)}</p>
-              </div>
-              <div className="rounded-2xl bg-white/[0.06] p-4">
-                <p className="text-slate-400">Budget</p>
-                <p className="mt-1 font-medium text-white">{budgetLabel(selectedMapSpot.budgetLevel)}</p>
-              </div>
+              <Info label="Season" value={selectedMapSpot.bestSeason.join(" / ")} />
+              <Info label="Time" value={selectedMapSpot.bestTime.join(" / ")} />
+              <Info label="Difficulty" value={difficultyLabel(selectedMapSpot.difficulty)} />
+              <Info label="Budget" value={budgetLabel(selectedMapSpot.budgetLevel)} />
             </div>
             <div className="mt-6 flex gap-3">
               <WishlistButton spotId={selectedMapSpot.id} className="flex-1" />
-              <Link
-                href={`/spots/${selectedMapSpot.id}`}
-                className={buttonVariants({ variant: "primary", size: "md", className: "flex-1" })}
-              >
+              <Link href={`/spots/${selectedMapSpot.id}`} className={buttonVariants({ variant: "primary", size: "md", className: "flex-1" })}>
                 詳細を見る
               </Link>
             </div>
@@ -318,7 +286,7 @@ export function HomePage() {
       <section className="mx-auto max-w-7xl px-5 py-24 md:px-8">
         <SectionHeading
           eyebrow="Trip Style"
-          title="旅のスタイルから、景色を逆引きする。"
+          title="旅のスタイルから、景色を選び直す。"
           description="誰と、どう移動して、どんな温度感で過ごしたいか。目的地より先に、旅の感覚から選べます。"
         />
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -331,9 +299,7 @@ export function HomePage() {
                 href={`/map?style=${encodeURIComponent(style.label)}`}
                 className="group rounded-[28px] border border-white/[0.12] bg-white/[0.065] p-5 shadow-glass transition hover:-translate-y-1 hover:border-cyan-200/40"
               >
-                <div
-                  className={`mb-8 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.12] bg-gradient-to-br ${style.tone}`}
-                >
+                <div className={`mb-8 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.12] bg-gradient-to-br ${style.tone}`}>
                   <Icon className="h-6 w-6 text-cyan-100" />
                 </div>
                 <h3 className="text-xl font-semibold text-white">{style.label}</h3>
@@ -376,5 +342,14 @@ export function HomePage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-white/[0.06] p-4">
+      <p className="text-slate-400">{label}</p>
+      <p className="mt-1 font-medium text-white">{value}</p>
+    </div>
   );
 }

@@ -44,9 +44,7 @@ export function SiteHeader() {
                 href={item.href}
                 className={cn(
                   "rounded-full px-4 py-2 text-sm font-medium transition",
-                  active
-                    ? "bg-white text-slate-950"
-                    : "text-slate-300 hover:bg-white/10 hover:text-white"
+                  active ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10 hover:text-white"
                 )}
               >
                 {item.label}
@@ -56,25 +54,11 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/map"
-            className={buttonVariants({
-              variant: "secondary",
-              size: "sm",
-              className: "hidden md:inline-flex"
-            })}
-          >
+          <Link href="/map" className={buttonVariants({ variant: "secondary", size: "sm", className: "hidden md:inline-flex" })}>
             <Map className="h-4 w-4" />
             地図へ
           </Link>
-          <Link
-            href="/ai-planner"
-            className={buttonVariants({
-              variant: "primary",
-              size: "sm",
-              className: "hidden sm:inline-flex"
-            })}
-          >
+          <Link href="/ai-planner" className={buttonVariants({ variant: "primary", size: "sm", className: "hidden sm:inline-flex" })}>
             <Sparkles className="h-4 w-4" />
             AI相談
           </Link>

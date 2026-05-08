@@ -65,7 +65,7 @@ export const spots: Spot[] = [
     budgetLevel: "medium",
     duration: "2泊3日",
     highlights: ["ニシ浜", "南十字星", "日本最南端の碑"],
-    tips: ["船の欠航リスクを見込む", "宿とレンタサイクルは早めに予約"]
+    tips: ["船の欠航リスクを見込む", "宿と移動手段は早めに予約"]
   },
   {
     id: "miyako",
@@ -73,7 +73,7 @@ export const spots: Spot[] = [
     country: "日本",
     region: "沖縄県",
     description:
-      "橋でつながる島々と、抜けるような宮古ブルー。ドライブしながら複数のビーチを巡れる、海好きのための絶景アイランド。",
+      "橋でつながる島々と、透き通る宮古ブルー。ドライブしながら複数のビーチを巡れる、海好きのための絶景アイランド。",
     image:
       "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=85",
     latitude: 24.8056,
@@ -109,7 +109,7 @@ export const spots: Spot[] = [
     budgetLevel: "medium",
     duration: "1泊2日",
     highlights: ["赤瓦の集落", "コンドイ浜", "西桟橋の夕日"],
-    tips: ["集落では静かに歩く", "日帰りでも朝早めの船が快適"]
+    tips: ["集落では静かに歩く", "日帰りでも午前の船が快適"]
   },
   {
     id: "kouri",
@@ -175,7 +175,7 @@ export const spots: Spot[] = [
     budgetLevel: "low",
     duration: "1泊2日",
     highlights: ["来島海峡大橋", "多々羅大橋", "瀬戸内サンセット"],
-    tips: ["自転車旅なら荷物は軽く", "島ごとのカフェ休憩を入れる"]
+    tips: ["サイクリング旅なら荷物は軽く", "島ごとのカフェ休憩を入れる"]
   },
   {
     id: "okunoshima",
@@ -205,7 +205,7 @@ export const spots: Spot[] = [
     country: "日本",
     region: "鳥取県",
     description:
-      "日本海を背景に広がる砂の稜線。風紋、夕日、星空が別世界のような表情を見せる、国内で最も非日常な景観のひとつ。",
+      "日本海を背景に広がる砂の稜線。風紋、夕日、星空が異世界のような表情を見せる、国内でも非日常な景観。",
     image:
       "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=85",
     latitude: 35.5396,
@@ -315,7 +315,7 @@ export const spots: Spot[] = [
     country: "日本",
     region: "山梨県",
     description:
-      "湖面越しの富士山、逆さ富士、朝焼け、星空まで狙える王道絶景。季節と時間帯で何度でも違う写真になる。",
+      "湖面越しの富士山、逆さ富士、朝焼け、星空まで狙える王道絶景。季節と時間帯で何度でも違う一枚になる。",
     image:
       "https://images.unsplash.com/photo-1570459027562-4a916cc6113f?auto=format&fit=crop&w=1600&q=85",
     latitude: 35.5013,
@@ -337,7 +337,7 @@ export const spots: Spot[] = [
     country: "日本",
     region: "鹿児島県",
     description:
-      "苔むす森、巨木、滝、海が同居する生命力の島。雨すら演出に変わる、自然没入型の旅に向いている。",
+      "苔むす森、巨木、滝、海が同居する生命力の島。天気すら演出に変わる、自然没入型の旅に向いている。",
     image:
       "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=85",
     latitude: 30.3586,
@@ -359,7 +359,7 @@ export const spots: Spot[] = [
     country: "ボリビア",
     region: "ポトシ県",
     description:
-      "雨季には空と大地の境界が消える、世界屈指の一生に一度の絶景。星空と朝焼けのリフレクションが特に圧倒的。",
+      "雨季には空と大地の境界が消える、世界屈指の一生に一度の絶景。星空と朝焼けのリフレクションが圧倒的。",
     image:
       "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1600&q=85",
     latitude: -20.1338,
@@ -417,7 +417,7 @@ export const spots: Spot[] = [
     budgetLevel: "high",
     duration: "4泊6日",
     highlights: ["イアの夕日", "白い街並み", "洞窟ホテル"],
-    tips: ["夕日スポットは早めに場所取り", "夏は宿代が上がりやすい"]
+    tips: ["夕日スポットは早めに場所取り", "夏の宿代は上がりやすい"]
   },
   {
     id: "cappadocia",
@@ -425,7 +425,7 @@ export const spots: Spot[] = [
     country: "トルコ",
     region: "中央アナトリア",
     description:
-      "奇岩群の上を無数の気球が昇る朝の景色が象徴的。早朝の数十分だけ訪れる幻想的な光が旅のハイライトになる。",
+      "奇岩群の上を無数の気球が舞う朝の景色が象徴的。早朝の光が旅のハイライトになる幻想的な絶景。",
     image:
       "https://images.unsplash.com/photo-1533536201350-93ebe24101f5?auto=format&fit=crop&w=1600&q=85",
     latitude: 38.6431,
@@ -504,7 +504,7 @@ export const spots: Spot[] = [
     photoScore: 98,
     budgetLevel: "high",
     duration: "5泊7日",
-    highlights: ["レイクルイーズ", "モレーン湖", "アイスフィールド Parkway"],
+    highlights: ["レイクルイーズ", "モレーン湖", "アイスフィールド・パークウェイ"],
     tips: ["人気湖は早朝到着が安心", "野生動物との距離を保つ"]
   }
 ];
@@ -540,4 +540,6 @@ export const travelStyleOptions = [
   "一生に一度の旅"
 ];
 
-export const allTags = Array.from(new Set(spots.flatMap((spot) => spot.tags))).sort();
+export const allTags = Array.from(new Set(spots.flatMap((spot) => spot.tags))).sort((a, b) =>
+  a.localeCompare(b, "ja")
+);

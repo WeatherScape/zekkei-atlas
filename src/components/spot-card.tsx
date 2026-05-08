@@ -29,7 +29,7 @@ export function SpotCard({
       onClick={() => onSelect?.(spot)}
       className={cn(
         "group overflow-hidden rounded-[28px] border border-white/[0.12] bg-white/[0.075] shadow-glass backdrop-blur-2xl transition duration-300",
-        selected ? "border-cyan-200/60 ring-2 ring-cyan-200/25" : "hover:border-cyan-200/40",
+        selected ? "border-cyan-200/70 ring-2 ring-cyan-200/25" : "hover:border-cyan-200/40",
         onSelect ? "cursor-pointer" : "",
         className
       )}
@@ -63,7 +63,9 @@ export function SpotCard({
       </div>
 
       <div className="space-y-4 p-5">
-        {!compact ? <p className="line-clamp-2 text-sm leading-7 text-slate-300">{spot.description}</p> : null}
+        {!compact ? (
+          <p className="line-clamp-2 text-sm leading-7 text-slate-300">{spot.description}</p>
+        ) : null}
 
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-3">

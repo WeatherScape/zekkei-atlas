@@ -8,7 +8,7 @@ export function difficultyLabel(difficulty: Spot["difficulty"]) {
   return {
     easy: "気軽",
     normal: "標準",
-    hard: "冒険"
+    hard: "上級"
   }[difficulty];
 }
 
@@ -81,8 +81,8 @@ export function scoreSpotForPlanner(
   return score;
 }
 
-export function getNearbySpots(current: Spot, spots: Spot[]) {
-  return spots
+export function getNearbySpots(current: Spot, items: Spot[]) {
+  return items
     .filter((spot) => spot.id !== current.id)
     .map((spot) => {
       const sharedTags = spot.tags.filter((tag) => current.tags.includes(tag)).length;
@@ -90,7 +90,8 @@ export function getNearbySpots(current: Spot, spots: Spot[]) {
         current.bestSeason.includes(season)
       ).length;
       const regionMatch = spot.region === current.region ? 3 : 0;
-      return { spot, score: sharedTags * 2 + sharedSeason + regionMatch };
+      const countryMatch = spot.country === current.country ? 1 : 0;
+      return { spot, score: sharedTags * 2 + sharedSeason + regionMatch + countryMatch };
     })
     .sort((a, b) => b.score - a.score || b.spot.photoScore - a.spot.photoScore)
     .slice(0, 3)

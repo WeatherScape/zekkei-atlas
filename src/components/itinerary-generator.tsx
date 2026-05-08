@@ -13,17 +13,17 @@ export function ItineraryGenerator({ spot }: { spot: Spot }) {
     {
       day: "Day 1",
       title: "移動、夕日スポット、地元グルメ",
-      detail: `${spot.region}へ移動し、夕方は${spot.bestTime.includes("夕方") ? "ベスト時間帯の光" : "旅の導入に合う柔らかい光"}を狙って撮影。夜は土地の食事でコンディションを整えます。`
+      detail: `${spot.region}へ移動し、夕方は${spot.bestTime.includes("夕方") ? "ベスト時間帯の光" : "旅の導入に合う柔らかい光"}を狙って撮影。夜は地元の食事でコンディションを整えます。`
     },
     {
       day: "Day 2",
       title: "メイン絶景、アクティビティ、星空",
-      detail: `${spot.highlights[0]}を中心に過ごす日。午後は周辺散策、夜は${spot.tags.includes("星空") ? "星空撮影" : "静かな夜景散歩"}まで余白を残します。`
+      detail: `${spot.highlights[0]}を中心に過ごす日。午後は周辺散策、夜は${spot.tags.includes("星空") ? "星空撮影" : "静かな夜の散歩"}まで余白を残します。`
     },
     {
       day: "Day 3",
       title: "朝日、カフェ、帰路",
-      detail: `${spot.bestTime.includes("早朝") || spot.bestTime.includes("朝") ? "朝の光で最後の撮影" : "朝はゆっくり余韻を味わい"}、カフェや土産時間を入れて帰路へ。`
+      detail: `${spot.bestTime.includes("早朝") || spot.bestTime.includes("朝") ? "朝の光で最後の撮影" : "朝のゆったりした余白"}を入れ、カフェやお土産時間を確保して帰路へ。`
     }
   ];
 

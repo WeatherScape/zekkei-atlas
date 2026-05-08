@@ -38,7 +38,7 @@ function curatedMatches(input: TravelPlanInput) {
   if (includesAny(text, ["紅葉", "秋"])) {
     return ["kamikochi", "shirakawago", "aso"];
   }
-  if (includesAny(text, ["海", "ドライブ", "レンタカー"]) && includesAny(text, ["ドライブ", "車", "レンタカー"])) {
+  if (includesAny(text, ["海", "ドライブ", "レンタカー", "車"])) {
     return ["miyako", "tsunoshima", "shimanami"];
   }
   if (includesAny(text, ["海", "星空", "夏"])) {
@@ -74,7 +74,7 @@ export function generateTravelPlan(input: TravelPlanInput): TravelPlan {
 
   return {
     recommendations: ranked,
-    reason: `${top.name}は「${input.scenery}」と「${input.mood}」の相性が高く、${input.season}に${top.bestTime.join("・")}の景色を狙いやすい候補です。${input.companion}との旅でも移動と滞在のバランスが取りやすく、写真映えスコアも${top.photoScore}/100と強いです。`,
+    reason: `${top.name}は「${input.scenery}」と「${input.mood}」の相性が高く、${input.season}に${top.bestTime.join("・")}の景色を狙いやすい候補です。${input.companion}との旅でも移動と滞在のバランスが取りやすく、写真映えスコアも${top.photoScore}/100と強めです。`,
     itinerary: [
       {
         day: "Day 1",
@@ -92,7 +92,7 @@ export function generateTravelPlan(input: TravelPlanInput): TravelPlan {
         detail: `朝は${top.bestTime.includes("朝") || top.bestTime.includes("早朝") ? "もう一度撮影" : "カフェと散策"}を入れ、余裕があれば${second.name}の雰囲気も味わって帰ります。`
       }
     ],
-    photoTime: `${top.bestTime.join(" / ")}。特に${top.bestTime[0]}は人が少なく、光の方向も読みやすい時間帯です。`,
+    photoTime: `${top.bestTime.join(" / ")}。特に${top.bestTime[0]}は人が少なく、光の向きも読みやすい時間帯です。`,
     caution: [
       top.tips[0],
       top.country !== "日本"
@@ -100,7 +100,7 @@ export function generateTravelPlan(input: TravelPlanInput): TravelPlan {
         : "天候で見え方が大きく変わるため、代替スポットを1つ持っておくと安心です。",
       top.difficulty === "hard"
         ? "体力と装備に余裕を持ち、無理な行程にしないでください。"
-        : "人気時間帯は混みやすいため、撮影場所は少し早めに到着してください。"
+        : "人気時間帯は混みやすいため、撮影場所には少し早めに到着してください。"
     ],
     budget: `${input.budget}を目安に、${budgetLabel(top.budgetLevel)}帯。移動費と宿泊費を先に押さえると計画しやすいです。`,
     packing: Array.from(

@@ -103,16 +103,8 @@ export default function SpotDetailPage({ params }: { params: { id: string } }) {
           </GlassPanel>
 
           <div className="grid gap-6 md:grid-cols-2">
-            <InfoList
-              icon={<Luggage className="h-5 w-5" />}
-              title="持っていくもの"
-              items={packing}
-            />
-            <InfoList
-              icon={<ShieldAlert className="h-5 w-5" />}
-              title="注意点"
-              items={cautions}
-            />
+            <InfoList icon={<Luggage className="h-5 w-5" />} title="持っていくもの" items={packing} />
+            <InfoList icon={<ShieldAlert className="h-5 w-5" />} title="注意点" items={cautions} />
           </div>
 
           <GlassPanel className="p-6 md:p-8">

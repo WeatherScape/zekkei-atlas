@@ -37,7 +37,13 @@ export function WishlistButton({
       aria-pressed={saved}
     >
       <Heart className={cn("h-4 w-4", saved ? "fill-slate-950" : "")} />
-      {size === "icon" ? <span className="sr-only">{saved ? savedLabel : label}</span> : saved ? savedLabel : label}
+      {size === "icon" ? (
+        <span className="sr-only">{saved ? savedLabel : label}</span>
+      ) : saved ? (
+        savedLabel
+      ) : (
+        label
+      )}
     </Button>
   );
 }

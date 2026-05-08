@@ -1,17 +1,19 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
   Bot,
   Camera,
+  Clock,
   Filter,
   MapPin,
   RotateCcw,
   Search,
   SlidersHorizontal,
-  Sparkles
+  Sparkles,
+  Wallet
 } from "lucide-react";
 import {
   allTags,
@@ -25,13 +27,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { FilterChip } from "@/components/filter-chip";
 import { GlassPanel } from "@/components/ui/glass-panel";
-import { MockMap } from "@/components/mock-map";
 import { SpotCard } from "@/components/spot-card";
 import { WishlistButton } from "@/components/wishlist-button";
+import { TravelMap } from "@/components/map/TravelMap";
 import { budgetLabel, difficultyLabel, isDomestic, normalizeText } from "@/lib/utils";
 
 type ScopeFilter = "all" | "domestic" | "overseas";
 type DifficultyFilter = "all" | Spot["difficulty"];
+
+type MapExplorerProps = {
+  initialSearch?: string;
+  initialTag?: string;
+  initialStyle?: string;
+  initialSeason?: string;
+  initialTime?: string;
+  initialScope?: string;
+  initialDifficulty?: string;
+};
 
 function spotMatchesKeyword(spot: Spot, keyword: string) {
   if (!keyword.trim()) return true;
@@ -49,16 +61,6 @@ function spotMatchesKeyword(spot: Spot, keyword: string) {
   );
   return haystack.includes(normalizeText(keyword));
 }
-
-type MapExplorerProps = {
-  initialSearch?: string;
-  initialTag?: string;
-  initialStyle?: string;
-  initialSeason?: string;
-  initialTime?: string;
-  initialScope?: string;
-  initialDifficulty?: string;
-};
 
 function validOrAll(value: string | undefined, options: string[]) {
   return value && options.includes(value) ? value : "all";
@@ -113,6 +115,15 @@ export function MapExplorer({
 
   const selectedSpot = filteredSpots.find((spot) => spot.id === selectedSpotId) ?? filteredSpots[0];
 
+  const activeFilterCount =
+    selectedTags.length +
+    (season !== "all" ? 1 : 0) +
+    (time !== "all" ? 1 : 0) +
+    (style !== "all" ? 1 : 0) +
+    (scope !== "all" ? 1 : 0) +
+    (difficulty !== "all" ? 1 : 0) +
+    (keyword.trim() ? 1 : 0);
+
   const toggleTag = (tag: string) => {
     setSelectedTags((current) =>
       current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]
@@ -139,7 +150,7 @@ export function MapExplorer({
       keyword ? `キーワード:${keyword}` : "",
       selectedTags.length ? `タグ:${selectedTags.join("、")}` : "",
       season !== "all" ? `季節:${season}` : "",
-      time !== "all" ? `時間:${time}` : "",
+      time !== "all" ? `時間帯:${time}` : "",
       style !== "all" ? `スタイル:${style}` : "",
       scope !== "all" ? `範囲:${scope === "domestic" ? "国内" : "海外"}` : "",
       difficulty !== "all" ? `難易度:${difficultyLabel(difficulty)}` : ""
@@ -150,11 +161,13 @@ export function MapExplorer({
 
   return (
     <main className="min-h-screen bg-atlas-ink text-white">
-      <section className="relative overflow-hidden px-5 pb-10 pt-32 md:px-8">
+      <section className="relative overflow-hidden px-4 pb-12 pt-28 md:px-8 md:pt-32">
         <div className="absolute inset-0 bg-night-rim" />
-        <div className="absolute inset-0 bg-atlas-grid bg-[length:72px_72px] opacity-35" />
-        <div className="relative mx-auto max-w-7xl">
-          <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+        <div className="absolute inset-0 bg-atlas-grid bg-[length:72px_72px] opacity-25" />
+        <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_50%_0%,rgba(103,232,249,.20),transparent_48%)]" />
+
+        <div className="relative mx-auto max-w-[1480px]">
+          <div className="mb-7 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
               <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
                 ZEKKEI ATLAS
@@ -168,23 +181,23 @@ export function MapExplorer({
             </div>
             <Link
               href={`/ai-planner${aiPrompt ? `?prompt=${aiPrompt}` : ""}`}
-              className={buttonVariants({ variant: "primary", size: "lg" })}
+              className={buttonVariants({ variant: "primary", size: "lg", className: "w-fit" })}
             >
               <Sparkles className="h-5 w-5" />
-              AIにこの条件で聞く
+              AIにこの条件で相談する
             </Link>
           </div>
 
           <form
             onSubmit={handleSearch}
-            className="mb-5 flex flex-col gap-3 rounded-[28px] border border-white/[0.12] bg-white/[0.07] p-3 shadow-glass backdrop-blur-2xl md:flex-row md:items-center"
+            className="mb-5 grid gap-3 rounded-[30px] border border-white/[0.12] bg-white/[0.07] p-3 shadow-glass backdrop-blur-2xl lg:grid-cols-[1fr_auto_auto]"
           >
-            <label className="flex h-14 min-h-14 flex-1 items-center gap-3 rounded-2xl bg-slate-950/50 px-4">
+            <label className="flex h-14 min-h-14 items-center gap-3 rounded-2xl bg-slate-950/50 px-4">
               <Search className="h-5 w-5 text-cyan-100" />
               <input
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
-                placeholder="星空、海、紅葉、車なし、週末旅..."
+                placeholder="海、星空、紅葉、車なし、週末旅..."
                 className="h-12 w-full bg-transparent text-base text-white outline-none placeholder:text-slate-500"
               />
             </label>
@@ -198,17 +211,14 @@ export function MapExplorer({
           </form>
 
           <div className="mb-5 flex gap-2 overflow-x-auto pb-2 xl:hidden">
-            {[...allTags.slice(0, 12), ...seasonOptions, ...travelStyleOptions.slice(0, 4)].map((item) => (
+            {[...popularMobileFilters()].map((item) => (
               <FilterChip
                 key={item}
                 label={item}
-                active={
-                  selectedTags.includes(item) ||
-                  season === item ||
-                  style === item
-                }
+                active={selectedTags.includes(item) || season === item || style === item || time === item}
                 onClick={() => {
                   if (seasonOptions.includes(item)) setSeason(season === item ? "all" : item);
+                  else if (timeOptions.includes(item)) setTime(time === item ? "all" : item);
                   else if (travelStyleOptions.includes(item)) setStyle(style === item ? "all" : item);
                   else toggleTag(item);
                 }}
@@ -218,28 +228,15 @@ export function MapExplorer({
           </div>
 
           <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)_360px]">
-            <GlassPanel className="xl:sticky xl:top-28 xl:h-[calc(100vh-8rem)] xl:overflow-y-auto">
+            <GlassPanel className="hidden xl:block xl:sticky xl:top-28 xl:h-[calc(100vh-8rem)] xl:overflow-y-auto">
               <div className="space-y-6 p-5">
                 <div className="flex items-center justify-between">
                   <h2 className="flex items-center gap-2 text-lg font-semibold">
                     <SlidersHorizontal className="h-5 w-5 text-cyan-100" />
                     Filters
                   </h2>
-                  <Button variant="ghost" size="sm" onClick={resetFilters}>
-                    <RotateCcw className="h-4 w-4" />
-                    Reset
-                  </Button>
+                  <Badge>{activeFilterCount} active</Badge>
                 </div>
-
-                <label className="flex h-12 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] px-4">
-                  <Search className="h-4 w-4 text-cyan-100" />
-                  <input
-                    value={keyword}
-                    onChange={(event) => setKeyword(event.target.value)}
-                    placeholder="地名・タグ・気分"
-                    className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
-                  />
-                </label>
 
                 <FilterGroup title="タグ">
                   <div className="flex flex-wrap gap-2">
@@ -255,30 +252,23 @@ export function MapExplorer({
                 </FilterGroup>
 
                 <FilterGroup title="季節">
-                  <div className="flex flex-wrap gap-2">
-                    <FilterChip label="すべて" active={season === "all"} onClick={() => setSeason("all")} />
-                    {seasonOptions.map((item) => (
-                      <FilterChip key={item} label={item} active={season === item} onClick={() => setSeason(item)} />
-                    ))}
-                  </div>
+                  <ChipRow
+                    value={season}
+                    options={seasonOptions}
+                    onChange={(value) => setSeason(value)}
+                  />
                 </FilterGroup>
 
                 <FilterGroup title="時間帯">
-                  <div className="flex flex-wrap gap-2">
-                    <FilterChip label="すべて" active={time === "all"} onClick={() => setTime("all")} />
-                    {timeOptions.map((item) => (
-                      <FilterChip key={item} label={item} active={time === item} onClick={() => setTime(item)} />
-                    ))}
-                  </div>
+                  <ChipRow value={time} options={timeOptions} onChange={(value) => setTime(value)} />
                 </FilterGroup>
 
                 <FilterGroup title="旅行スタイル">
-                  <div className="flex flex-wrap gap-2">
-                    <FilterChip label="すべて" active={style === "all"} onClick={() => setStyle("all")} />
-                    {travelStyleOptions.map((item) => (
-                      <FilterChip key={item} label={item} active={style === item} onClick={() => setStyle(item)} />
-                    ))}
-                  </div>
+                  <ChipRow
+                    value={style}
+                    options={travelStyleOptions}
+                    onChange={(value) => setStyle(value)}
+                  />
                 </FilterGroup>
 
                 <FilterGroup title="国内 / 海外">
@@ -304,7 +294,7 @@ export function MapExplorer({
                       ["all", "すべて"],
                       ["easy", "気軽"],
                       ["normal", "標準"],
-                      ["hard", "冒険"]
+                      ["hard", "上級"]
                     ].map(([value, label]) => (
                       <FilterChip
                         key={value}
@@ -325,10 +315,12 @@ export function MapExplorer({
                     <Filter className="h-4 w-4" />
                     {filteredSpots.length} spots matched
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">ピンまたはカードを選ぶと詳細が更新されます。</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    ピン、カード、詳細パネルが連動します。密集エリアはクラスタで整理しています。
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {selectedTags.map((tag) => (
+                  {selectedTags.slice(0, 4).map((tag) => (
                     <Badge key={tag}>#{tag}</Badge>
                   ))}
                   {season !== "all" ? <Badge>{season}</Badge> : null}
@@ -337,14 +329,14 @@ export function MapExplorer({
                 </div>
               </div>
 
-              <MockMap
+              <TravelMap
                 spots={filteredSpots}
                 selectedSpotId={selectedSpot?.id}
                 onSelect={(spot) => setSelectedSpotId(spot.id)}
-                dense
+                onReset={resetFilters}
               />
 
-              <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
                 {filteredSpots.map((spot) => (
                   <SpotCard
                     key={spot.id}
@@ -355,17 +347,6 @@ export function MapExplorer({
                   />
                 ))}
               </div>
-
-              {filteredSpots.length === 0 ? (
-                <GlassPanel className="p-8 text-center">
-                  <Bot className="mx-auto h-10 w-10 text-cyan-100" />
-                  <h3 className="mt-4 text-2xl font-semibold">条件に合う絶景が見つかりませんでした。</h3>
-                  <p className="mt-3 text-slate-400">タグを少し外すか、AI提案ページで近い候補を生成できます。</p>
-                  <Button variant="primary" className="mt-6" onClick={resetFilters}>
-                    条件をリセット
-                  </Button>
-                </GlassPanel>
-              ) : null}
             </div>
 
             <GlassPanel className="xl:sticky xl:top-28 xl:h-[calc(100vh-8rem)] xl:overflow-y-auto">
@@ -377,7 +358,7 @@ export function MapExplorer({
                       alt={selectedSpot.name}
                       className="h-64 w-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/86 via-slate-950/20 to-transparent" />
                     <div className="absolute bottom-4 left-4 right-4">
                       <p className="flex items-center gap-1.5 text-xs text-cyan-100">
                         <MapPin className="h-3.5 w-3.5" />
@@ -397,34 +378,47 @@ export function MapExplorer({
 
                   <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
                     <InfoCard label="Best Season" value={selectedSpot.bestSeason.join(" / ")} />
-                    <InfoCard label="Best Time" value={selectedSpot.bestTime.join(" / ")} />
+                    <InfoCard label="Best Time" value={selectedSpot.bestTime.join(" / ")} icon={<Clock className="h-4 w-4" />} />
                     <InfoCard label="Difficulty" value={difficultyLabel(selectedSpot.difficulty)} />
                     <InfoCard label="Photo Score" value={`${selectedSpot.photoScore}/100`} icon={<Camera className="h-4 w-4" />} />
-                    <InfoCard label="Budget" value={budgetLabel(selectedSpot.budgetLevel)} />
+                    <InfoCard label="Budget" value={budgetLabel(selectedSpot.budgetLevel)} icon={<Wallet className="h-4 w-4" />} />
                     <InfoCard label="Duration" value={selectedSpot.duration} />
                   </div>
 
                   <div className="mt-6 space-y-3">
                     {selectedSpot.highlights.map((highlight) => (
-                      <div key={highlight} className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm text-slate-200">
+                      <div
+                        key={highlight}
+                        className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm text-slate-200"
+                      >
                         {highlight}
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-6 flex gap-3">
-                    <WishlistButton spotId={selectedSpot.id} className="flex-1" />
+                  <div className="mt-6 grid gap-3">
+                    <WishlistButton spotId={selectedSpot.id} className="w-full" />
                     <Link
                       href={`/spots/${selectedSpot.id}`}
-                      className={buttonVariants({ variant: "primary", size: "md", className: "flex-1" })}
+                      className={buttonVariants({ variant: "primary", size: "md", className: "w-full" })}
                     >
-                      詳細
+                      詳細を見る
                       <ArrowRight className="h-4 w-4" />
+                    </Link>
+                    <Link
+                      href={`/ai-planner?prompt=${encodeURIComponent(`${selectedSpot.name}を中心に旅程を作る`)}`}
+                      className={buttonVariants({ variant: "outline", size: "md", className: "w-full" })}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      AIに旅程を相談
                     </Link>
                   </div>
                 </div>
               ) : (
-                <div className="p-8 text-center text-slate-400">スポットを選択してください。</div>
+                <div className="p-8 text-center text-slate-400">
+                  <Bot className="mx-auto mb-3 h-8 w-8 text-cyan-100" />
+                  スポットを選択してください。
+                </div>
               )}
             </GlassPanel>
           </div>
@@ -434,7 +428,23 @@ export function MapExplorer({
   );
 }
 
-function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
+function popularMobileFilters() {
+  return [
+    "星空",
+    "海",
+    "夕日",
+    "紅葉",
+    "雪",
+    "夏",
+    "冬",
+    "夜",
+    "カップル旅",
+    "ドライブ旅",
+    "海外旅行"
+  ];
+}
+
+function FilterGroup({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
       <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
@@ -445,6 +455,25 @@ function FilterGroup({ title, children }: { title: string; children: React.React
   );
 }
 
+function ChipRow({
+  value,
+  options,
+  onChange
+}: {
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <FilterChip label="すべて" active={value === "all"} onClick={() => onChange("all")} />
+      {options.map((item) => (
+        <FilterChip key={item} label={item} active={value === item} onClick={() => onChange(item)} />
+      ))}
+    </div>
+  );
+}
+
 function InfoCard({
   label,
   value,
@@ -452,7 +481,7 @@ function InfoCard({
 }: {
   label: string;
   value: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-4">
