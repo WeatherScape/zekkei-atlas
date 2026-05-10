@@ -120,41 +120,6 @@ function groupSpotsByScreenDistance(
   return groups;
 }
 
-function distanceKm(a: Spot, b: Spot) {
-  const earthRadius = 6371;
-  const toRad = (value: number) => (value * Math.PI) / 180;
-  const dLat = toRad(b.latitude - a.latitude);
-  const dLng = toRad(b.longitude - a.longitude);
-  const lat1 = toRad(a.latitude);
-  const lat2 = toRad(b.latitude);
-  const h =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  return earthRadius * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
-
-function getRelatedRouteSpots(selectedSpot: Spot | undefined, spots: Spot[]) {
-  if (!selectedSpot) return [];
-
-  return spots
-    .filter((spot) => spot.id !== selectedSpot.id)
-    .map((spot) => {
-      const sharedTags = spot.tags.filter((tag) => selectedSpot.tags.includes(tag)).length;
-      const sameCountry = spot.country === selectedSpot.country ? 2 : 0;
-      const sameRegion = spot.region === selectedSpot.region ? 2 : 0;
-      const distance = distanceKm(selectedSpot, spot);
-      const distanceScore = distance < 80 ? 4 : distance < 400 ? 3 : distance < 1500 ? 1 : 0;
-
-      return {
-        spot,
-        score: sharedTags * 3 + sameCountry + sameRegion + distanceScore + spot.photoScore / 100
-      };
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
-    .map((item) => item.spot);
-}
-
 export function LeafletTravelMap({
   spots,
   selectedSpotId,
@@ -272,29 +237,6 @@ export function LeafletTravelMap({
     layer.clearLayers();
     markerRefs.current = {};
     const current = latestRef.current;
-    const currentSelectedSpot = current.spots.find((spot) => spot.id === current.selectedSpotId);
-    const routeSpots = getRelatedRouteSpots(currentSelectedSpot, current.spots);
-
-    if (currentSelectedSpot && routeSpots.length > 0) {
-      routeSpots.forEach((routeSpot) => {
-        const route: Array<[number, number]> = [
-          [currentSelectedSpot.latitude, currentSelectedSpot.longitude],
-          [routeSpot.latitude, routeSpot.longitude]
-        ];
-
-        L.polyline(
-          route,
-          {
-            color: "#67e8f9",
-            weight: 1.8,
-            opacity: 0.34,
-            dashArray: "7 9",
-            interactive: false
-          }
-        ).addTo(layer);
-      });
-    }
-
     const groups = groupSpotsByScreenDistance(map, current.spots, current.selectedSpotId);
 
     groups.forEach((group) => {
