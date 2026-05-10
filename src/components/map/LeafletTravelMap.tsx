@@ -38,7 +38,7 @@ function getSeasonLabel(season?: string) {
 
 function getStatusFromSpot(spot: Spot) {
   const status = spot.travelStyle.find((item) => item.startsWith("status:"))?.replace("status:", "");
-  if (status === "thisYear" || status === "planning" || status === "visited" || status === "someday") {
+  if (status === "demo" || status === "thisYear" || status === "planning" || status === "visited" || status === "someday") {
     return status;
   }
   return "someday";
@@ -47,7 +47,7 @@ function getStatusFromSpot(spot: Spot) {
 function buildMarkerIcon(L: LeafletModule, spot: Spot, selected: boolean) {
   const status = getStatusFromSpot(spot);
   const lifetime = spot.tags.includes("一生に一度");
-  const size = selected ? 40 : lifetime ? 34 : status === "thisYear" ? 30 : 26;
+  const size = selected ? 40 : lifetime ? 34 : status === "demo" ? 22 : status === "thisYear" ? 30 : 26;
 
   return L.divIcon({
     className: "",

@@ -14,10 +14,9 @@ import {
   RotateCcw,
   Search,
   Sparkles,
-  Star,
   Telescope
 } from "lucide-react";
-import { seasonOptions, spots } from "@/data/spots";
+import { seasonOptions, spots, type Spot } from "@/data/spots";
 import {
   mySpotStatusLabels,
   mySpotToMapSpot,
@@ -30,7 +29,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { FilterChip } from "@/components/filter-chip";
 import { GlassPanel } from "@/components/ui/glass-panel";
 import { MySpotCard } from "@/components/my-spot-card";
-import { SpotCard } from "@/components/spot-card";
 import { TravelMap, type MapViewMode } from "@/components/map/TravelMap";
 import { useMySpots } from "@/hooks/use-my-spots";
 import { cn, normalizeText } from "@/lib/utils";
@@ -75,7 +73,10 @@ const modeOptions: Array<{ value: MapViewMode; label: string }> = [
   { value: "overseas", label: "海外" }
 ];
 
-const starterSpots = spots.filter((spot) => ["hateruma", "miyako", "uyuni", "tsunoshima"].includes(spot.id));
+const sampleSpotIds = ["hateruma", "uyuni", "iceland", "miyako"];
+const sampleSpots = sampleSpotIds
+  .map((id) => spots.find((spot) => spot.id === id))
+  .filter((spot): spot is Spot => Boolean(spot));
 
 function spotMatchesMode(spot: MySpot, mode: MapViewMode) {
   if (mode === "all") return true;
@@ -130,7 +131,7 @@ export function MapExplorer({
   initialTag = "",
   initialSeason = ""
 }: MapExplorerProps) {
-  const { isReady, mySpots, removeMySpot, updateMySpot } = useMySpots();
+  const { isReady, mySpots, removeMySpot, updateMySpot, importFromOfficialSpot } = useMySpots();
   const [keyword, setKeyword] = useState(initialSearch);
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>(initialTag ? [initialTag] : []);
@@ -178,6 +179,17 @@ export function MapExplorer({
     [filteredSpots]
   );
   const mapSpots = useMemo(() => locatedSpots.map(mySpotToMapSpot), [locatedSpots]);
+  const demoMapSpots = useMemo(
+    () =>
+      sampleSpots.map((spot) => ({
+        ...spot,
+        photoScore: 70,
+        travelStyle: [...spot.travelStyle, "status:demo"],
+        tags: [...spot.tags, "サンプル"]
+      })),
+    []
+  );
+  const visibleMapSpots = mySpots.length === 0 ? demoMapSpots : mapSpots;
 
   useEffect(() => {
     if (!filteredSpots.length) {
@@ -240,10 +252,10 @@ export function MapExplorer({
               <Button size="icon" className="h-14 w-14" onClick={openCreator} title="行きたい場所を追加">
                 <Plus className="h-6 w-6" />
               </Button>
-              <SidebarMetric label="All" value={isReady ? mySpots.length : 0} />
-              <SidebarMetric label="2026" value={statusCount(mySpots, "thisYear")} />
-              <SidebarMetric label="Plan" value={statusCount(mySpots, "planning")} />
-              <SidebarMetric label="Done" value={statusCount(mySpots, "visited")} />
+              <SidebarMetric label="すべて" value={isReady ? mySpots.length : 0} />
+              <SidebarMetric label="今年" value={statusCount(mySpots, "thisYear")} />
+              <SidebarMetric label="計画中" value={statusCount(mySpots, "planning")} />
+              <SidebarMetric label="行った" value={statusCount(mySpots, "visited")} />
             </div>
             <Link href="/wishlist" className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 hover:text-cyan-100">
               Board
@@ -251,16 +263,16 @@ export function MapExplorer({
           </aside>
 
           <div className="min-w-0 space-y-4">
-            <div className="rounded-[32px] border border-white/[0.12] bg-slate-950/58 p-4 shadow-glass backdrop-blur-2xl">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div className="rounded-[28px] border border-white/[0.12] bg-slate-950/58 p-3 shadow-glass backdrop-blur-2xl md:p-4">
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
                 <div className="max-w-3xl">
                   <Badge className="mb-3 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
                     Private Travel Map
                   </Badge>
-                  <h1 className="text-balance text-3xl font-semibold tracking-normal md:text-5xl">
+                  <h1 className="text-balance text-2xl font-semibold tracking-normal md:text-4xl">
                     いつか行きたいを、後悔にしない。
                   </h1>
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 md:text-base md:leading-8">
+                  <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-300">
                     SNSで見つけた景色、ふと思い出した旅先、人生で見たい場所を、自分だけの地図に残そう。
                   </p>
                 </div>
@@ -275,12 +287,12 @@ export function MapExplorer({
                   </Button>
                   <Button size="md" onClick={openCreator}>
                     <Plus className="h-4 w-4" />
-                    行きたい場所を追加
+                    SNSで見つけた場所を残す
                   </Button>
                 </div>
               </div>
 
-              <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
                 {quickFilters.map((filter) => (
                   <button
                     key={filter.value}
@@ -341,16 +353,20 @@ export function MapExplorer({
 
             <div className="relative">
               <TravelMap
-                spots={mapSpots}
+                spots={visibleMapSpots}
                 selectedSpotId={selectedSpot?.id}
-                onSelect={(spot) => setSelectedId(spot.id)}
+                onSelect={(spot) => {
+                  if (mySpots.length === 0) return;
+                  setSelectedId(spot.id);
+                }}
                 onReset={resetFilters}
                 mode={mode}
                 season={season}
                 selectedTags={[
+                  mySpots.length === 0 ? "サンプル表示" : "",
                   quickFilters.find((item) => item.value === quickFilter)?.label ?? "すべて",
                   ...selectedTags
-                ].filter((tag) => tag !== "すべて")}
+                ].filter((tag) => tag && tag !== "すべて")}
                 addMode={addMode}
                 onPickLocation={(location) => {
                   setPickedLocation(location);
@@ -358,11 +374,17 @@ export function MapExplorer({
                   setAddMode(false);
                   setModalOpen(true);
                 }}
-                className="min-h-[62svh] md:min-h-[calc(100vh-18rem)] lg:min-h-[calc(100vh-18rem)]"
+                className="min-h-[62svh] md:min-h-[calc(100vh-14rem)] lg:min-h-[calc(100vh-14rem)]"
               />
 
               {mySpots.length === 0 && isReady ? (
-                <EmptyMapOverlay onAdd={openCreator} />
+                <EmptyMapOverlay
+                  onAdd={openCreator}
+                  onImport={(spotId) => {
+                    const imported = importFromOfficialSpot(spotId);
+                    if (imported) setSelectedId(imported.id);
+                  }}
+                />
               ) : null}
 
               <div className="pointer-events-none absolute bottom-4 left-4 right-4 z-[440] hidden md:block">
@@ -566,33 +588,74 @@ function RightEmptyPanel({ onAdd }: { onAdd: () => void }) {
   );
 }
 
-function EmptyMapOverlay({ onAdd }: { onAdd: () => void }) {
+function EmptyMapOverlay({ onAdd, onImport }: { onAdd: () => void; onImport: (spotId: string) => void }) {
   return (
-    <div className="absolute inset-4 z-[430] flex items-center justify-center rounded-[28px] border border-white/[0.12] bg-slate-950/72 p-5 text-center shadow-glass backdrop-blur-xl">
-      <div className="max-w-xl">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-cyan-200/30 bg-cyan-200/10 text-cyan-100">
-          <Heart className="h-7 w-7" />
+    <div className="absolute inset-4 z-[430] flex items-center justify-center overflow-y-auto rounded-[28px] border border-white/[0.12] bg-slate-950/66 p-4 text-center shadow-glass backdrop-blur-xl">
+      <div className="w-full max-w-4xl py-4">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-cyan-200/30 bg-cyan-200/10 text-cyan-100">
+          <Heart className="h-6 w-6" />
         </div>
-        <h2 className="text-3xl font-semibold">まだ、あなたの地図には景色がありません。</h2>
-        <p className="mx-auto mt-4 max-w-lg text-sm leading-8 text-slate-300">
-          SNSで見つけた場所、いつか行きたい島、人生で見たい絶景を追加して、自分だけの地図を育てましょう。
+        <h2 className="text-2xl font-semibold md:text-3xl">まだ、あなたの地図には景色がありません。</h2>
+        <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-300">
+          まずは1カ所だけ追加してみましょう。SNSで見つけた景色、いつか行きたい島、人生で見たい絶景が、あなた専用の地図に残ります。
         </p>
-        <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <Button size="lg" onClick={onAdd}>
             <Plus className="h-5 w-5" />
             最初の場所を追加する
           </Button>
           <Link href="/wishlist" className={buttonVariants({ variant: "secondary", size: "lg" })}>
-            おすすめから選ぶ
+            My Atlasを見る
           </Link>
         </div>
-        <div className="mt-8 hidden grid-cols-2 gap-4 md:grid">
-          {starterSpots.slice(0, 2).map((spot) => (
-            <SpotCard key={spot.id} spot={spot} compact />
-          ))}
+        <div className="mt-7 rounded-[24px] border border-cyan-200/15 bg-cyan-200/[0.07] p-4 text-left">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/70">Sample</p>
+              <h3 className="mt-1 text-xl font-semibold text-white">おすすめから始める</h3>
+              <p className="mt-1 text-sm text-slate-300">
+                追加すると、薄いデモピンがあなたのMy Atlasピンに変わります。
+              </p>
+            </div>
+            <Badge className="w-fit border-cyan-200/30 bg-cyan-200/10 text-cyan-50">地図上のピンはサンプル</Badge>
+          </div>
+          <div className="grid gap-3 md:grid-cols-4">
+            {sampleSpots.map((spot) => (
+              <SampleSpotCard key={spot.id} spot={spot} onImport={() => onImport(spot.id)} />
+            ))}
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function SampleSpotCard({ spot, onImport }: { spot: Spot; onImport: () => void }) {
+  return (
+    <article className="overflow-hidden rounded-2xl border border-white/[0.12] bg-slate-950/58 text-left">
+      <div className="relative h-28">
+        <img src={spot.image} alt={spot.name} className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+        <Badge className="absolute left-3 top-3 border-white/15 bg-slate-950/55 text-white">サンプル</Badge>
+      </div>
+      <div className="space-y-3 p-3">
+        <div>
+          <h4 className="font-semibold text-white">{spot.name}</h4>
+          <p className="mt-1 text-xs text-cyan-100">{spot.region} / {spot.country}</p>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {spot.tags.slice(0, 2).map((tag) => (
+            <span key={tag} className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-slate-200">
+              #{tag}
+            </span>
+          ))}
+        </div>
+        <Button type="button" size="sm" className="w-full" onClick={onImport}>
+          <Plus className="h-3.5 w-3.5" />
+          My Atlasに追加
+        </Button>
+      </div>
+    </article>
   );
 }
 
