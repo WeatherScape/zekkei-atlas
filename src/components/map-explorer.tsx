@@ -317,6 +317,7 @@ export function MapExplorer({
                 onPickLocation={(location) => {
                   setPickedLocation(location);
                   setEditingSpot(undefined);
+                  setAddMode(false);
                   setModalOpen(true);
                 }}
               />

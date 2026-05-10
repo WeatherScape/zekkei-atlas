@@ -134,7 +134,7 @@ export function AddMySpotModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/78 p-3 backdrop-blur-xl md:items-center md:p-6">
+    <div className="fixed inset-0 z-[5000] flex items-end justify-center bg-slate-950/78 p-3 backdrop-blur-xl md:items-center md:p-6">
       <form
         onSubmit={handleSubmit}
         className="grid max-h-[92vh] w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/[0.14] bg-slate-950 shadow-glass md:grid-cols-[1.08fr_0.92fr]"
