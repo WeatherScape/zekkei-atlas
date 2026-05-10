@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
-import { Bot, Check, ImageIcon, LinkIcon, MapPin, Sparkles, X } from "lucide-react";
+import { Bot, Check, ImageIcon, LinkIcon, MapPin, Sparkles, Upload, X } from "lucide-react";
 import {
   enrichDraftSpot,
   mySpotStatusLabels,
@@ -60,6 +60,7 @@ export function AddMySpotModal({
   const [companion, setCompanion] = useState("");
   const [firstStepMemo, setFirstStepMemo] = useState("");
   const [catchCopy, setCatchCopy] = useState("");
+  const [imageError, setImageError] = useState("");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -81,6 +82,7 @@ export function AddMySpotModal({
       setCompanion(editingSpot.companion ?? "");
       setFirstStepMemo(editingSpot.firstStepMemo ?? "");
       setCatchCopy(editingSpot.catchCopy ?? "");
+      setImageError("");
       return;
     }
     setName(initialName);
@@ -99,6 +101,7 @@ export function AddMySpotModal({
     setCompanion("");
     setFirstStepMemo("");
     setCatchCopy("");
+    setImageError("");
   }, [editingSpot, initialLatitude, initialLongitude, initialName, initialSourceUrl, open]);
 
   const draft = useMemo<MySpotDraft>(
@@ -157,6 +160,26 @@ export function AddMySpotModal({
     setBestTime((current) =>
       current.includes(time) ? current.filter((item) => item !== time) : [...current, time]
     );
+  };
+
+  const handleImageFile = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setImageError("画像ファイルを選んでください。");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setImageError("画像は8MB以下にしてください。");
+      return;
+    }
+
+    setImageError("");
+    try {
+      const dataUrl = await fileToCompressedDataUrl(file);
+      setImage(dataUrl);
+    } catch {
+      setImageError("画像を読み込めませんでした。別の画像で試してください。");
+    }
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -272,13 +295,29 @@ export function AddMySpotModal({
             </Field>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="画像URL">
-                <input
-                  value={image}
-                  onChange={(event) => setImage(event.target.value)}
-                  placeholder="任意"
-                  className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
-                />
+              <Field label="画像">
+                <div className="space-y-2">
+                  <label className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-cyan-200/25 bg-cyan-200/[0.08] px-4 text-sm font-semibold text-cyan-50 transition hover:bg-cyan-200/[0.14]">
+                    <Upload className="h-4 w-4" />
+                    手元の画像を選ぶ
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={(event) => handleImageFile(event.target.files?.[0])}
+                    />
+                  </label>
+                  <input
+                    value={image.startsWith("data:") ? "" : image}
+                    onChange={(event) => setImage(event.target.value)}
+                    placeholder="画像URLでもOK"
+                    className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
+                  />
+                  {image.startsWith("data:") ? (
+                    <p className="text-xs leading-5 text-cyan-100">選んだ画像をこのスポットに保存します。</p>
+                  ) : null}
+                  {imageError ? <p className="text-xs leading-5 text-rose-200">{imageError}</p> : null}
+                </div>
               </Field>
               <Field label="タグ">
                 <input
@@ -467,6 +506,35 @@ export function AddMySpotModal({
       </form>
     </div>
   );
+}
+
+function fileToCompressedDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Failed to read image"));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("Failed to load image"));
+      image.onload = () => {
+        const maxSize = 1400;
+        const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        if (!context) {
+          reject(new Error("Canvas is not available"));
+          return;
+        }
+        context.drawImage(image, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.84));
+      };
+      image.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function Field({

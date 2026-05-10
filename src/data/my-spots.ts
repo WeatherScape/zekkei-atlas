@@ -89,8 +89,13 @@ export function findOfficialSpot(nameOrUrl?: string) {
   const value = normalizeText(nameOrUrl ?? "");
   if (!value) return undefined;
   return spots.find((spot) => {
-    const terms = [spot.id, spot.name, spot.country, spot.region, ...spot.tags].map(normalizeText);
-    return terms.some((term) => term && value.includes(term));
+    const id = normalizeText(spot.id);
+    const name = normalizeText(spot.name);
+    return Boolean(
+      (id.length >= 4 && value.includes(id)) ||
+        (name.length >= 3 && value.includes(name)) ||
+        (value.length >= 3 && name.includes(value))
+    );
   });
 }
 
