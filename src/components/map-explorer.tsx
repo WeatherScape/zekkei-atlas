@@ -236,7 +236,7 @@ export function MapExplorer({
 
   return (
     <main className="min-h-screen overflow-hidden bg-atlas-ink text-white">
-      <section className="relative min-h-screen px-3 pb-6 pt-24 md:px-5 md:pt-24">
+      <section className="relative min-h-screen px-2 pb-24 pt-20 md:px-5 md:pb-6 md:pt-24">
         <div className="absolute inset-0 bg-night-rim" />
         <div className="absolute inset-0 bg-atlas-grid bg-[length:72px_72px] opacity-15" />
         <div className="pointer-events-none absolute -right-40 top-10 h-80 w-80 rounded-full bg-cyan-200/10 blur-3xl" />
@@ -276,16 +276,17 @@ export function MapExplorer({
                     SNSで見つけた景色、ふと思い出した旅先、人生で見たい場所を、自分だけの地図に残そう。
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
                   <Button
                     size="md"
+                    className="w-full sm:w-auto"
                     onClick={() => setAddMode((current) => !current)}
                     variant={addMode ? "primary" : "secondary"}
                   >
                     <MapPin className="h-4 w-4" />
                     {addMode ? "追加モード中" : "地図に追加"}
                   </Button>
-                  <Button size="md" onClick={openCreator}>
+                  <Button size="md" className="w-full sm:w-auto" onClick={openCreator}>
                     <Plus className="h-4 w-4" />
                     SNSで見つけた場所を残す
                   </Button>
@@ -374,7 +375,7 @@ export function MapExplorer({
                   setAddMode(false);
                   setModalOpen(true);
                 }}
-                className="min-h-[62svh] md:min-h-[calc(100vh-14rem)] lg:min-h-[calc(100vh-14rem)]"
+                className="min-h-[68svh] md:min-h-[calc(100vh-14rem)] lg:min-h-[calc(100vh-14rem)]"
               />
 
               {mySpots.length === 0 && isReady ? (
@@ -433,15 +434,15 @@ export function MapExplorer({
         <button
           type="button"
           onClick={openCreator}
-          className="fixed bottom-5 right-5 z-[900] flex h-14 w-14 items-center justify-center rounded-full border border-cyan-100/60 bg-cyan-200 text-slate-950 shadow-glow lg:hidden"
+          className="fixed bottom-5 right-4 z-[900] flex h-14 w-14 items-center justify-center rounded-full border border-cyan-100/60 bg-cyan-200 text-slate-950 shadow-glow lg:hidden"
           aria-label="行きたい場所を追加"
         >
           <Plus className="h-6 w-6" />
         </button>
 
-        <div className="relative z-[450] mt-4 lg:hidden">
+        <div className="relative z-[450] mt-3 lg:hidden">
           {selectedSpot ? (
-            <GlassPanel className="rounded-t-[32px] p-4">
+            <GlassPanel className="rounded-[28px] p-3">
               <SelectedSpotPanel
                 spot={selectedSpot}
                 onEdit={openEditor}
@@ -590,7 +591,7 @@ function RightEmptyPanel({ onAdd }: { onAdd: () => void }) {
 
 function EmptyMapOverlay({ onAdd, onImport }: { onAdd: () => void; onImport: (spotId: string) => void }) {
   return (
-    <div className="absolute inset-4 z-[430] flex items-center justify-center overflow-y-auto rounded-[28px] border border-white/[0.12] bg-slate-950/66 p-4 text-center shadow-glass backdrop-blur-xl">
+    <div className="absolute inset-2 z-[430] flex items-start justify-center overflow-y-auto rounded-[26px] border border-white/[0.12] bg-slate-950/72 p-3 text-center shadow-glass backdrop-blur-xl md:inset-4 md:items-center md:p-4">
       <div className="w-full max-w-4xl py-4">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-cyan-200/30 bg-cyan-200/10 text-cyan-100">
           <Heart className="h-6 w-6" />
@@ -619,7 +620,7 @@ function EmptyMapOverlay({ onAdd, onImport }: { onAdd: () => void; onImport: (sp
             </div>
             <Badge className="w-fit border-cyan-200/30 bg-cyan-200/10 text-cyan-50">地図上のピンはサンプル</Badge>
           </div>
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {sampleSpots.map((spot) => (
               <SampleSpotCard key={spot.id} spot={spot} onImport={() => onImport(spot.id)} />
             ))}
@@ -633,12 +634,12 @@ function EmptyMapOverlay({ onAdd, onImport }: { onAdd: () => void; onImport: (sp
 function SampleSpotCard({ spot, onImport }: { spot: Spot; onImport: () => void }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-white/[0.12] bg-slate-950/58 text-left">
-      <div className="relative h-28">
+      <div className="relative h-24 md:h-28">
         <img src={spot.image} alt={spot.name} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
         <Badge className="absolute left-3 top-3 border-white/15 bg-slate-950/55 text-white">サンプル</Badge>
       </div>
-      <div className="space-y-3 p-3">
+      <div className="space-y-2 p-3">
         <div>
           <h4 className="font-semibold text-white">{spot.name}</h4>
           <p className="mt-1 text-xs text-cyan-100">{spot.region} / {spot.country}</p>
@@ -650,7 +651,7 @@ function SampleSpotCard({ spot, onImport }: { spot: Spot; onImport: () => void }
             </span>
           ))}
         </div>
-        <Button type="button" size="sm" className="w-full" onClick={onImport}>
+        <Button type="button" size="sm" className="w-full px-3 text-[11px] md:text-xs" onClick={onImport}>
           <Plus className="h-3.5 w-3.5" />
           My Atlasに追加
         </Button>

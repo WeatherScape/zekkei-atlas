@@ -218,12 +218,12 @@ export function AddMySpotModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[5000] flex items-end justify-center bg-slate-950/78 p-3 backdrop-blur-xl md:items-center md:p-6">
+    <div className="fixed inset-0 z-[5000] flex items-end justify-center bg-slate-950/78 p-0 backdrop-blur-xl md:items-center md:p-6">
       <form
         onSubmit={handleSubmit}
-        className="grid max-h-[92vh] w-full max-w-5xl overflow-hidden rounded-[32px] border border-white/[0.14] bg-slate-950 shadow-glass md:grid-cols-[1.08fr_0.92fr]"
+        className="max-h-[96svh] w-full max-w-5xl overflow-y-auto rounded-t-[30px] border border-white/[0.14] bg-slate-950 shadow-glass md:grid md:max-h-[92vh] md:grid-cols-[1.08fr_0.92fr] md:overflow-hidden md:rounded-[32px]"
       >
-        <div className="max-h-[92vh] overflow-y-auto p-5 md:p-7">
+        <div className="p-5 pb-24 md:max-h-[92vh] md:overflow-y-auto md:p-7">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <Badge className="mb-3 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
@@ -440,9 +440,16 @@ export function AddMySpotModal({
               ))}
             </ChoiceGroup>
           </div>
+
+          <div className="sticky bottom-0 z-20 -mx-5 mt-6 border-t border-white/10 bg-slate-950/92 p-4 backdrop-blur-xl md:hidden">
+            <Button type="submit" size="lg" className="w-full" disabled={!name.trim() && !sourceUrl.trim()}>
+              {saved ? <Check className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
+              {saved ? "My Atlasを更新しました" : editingSpot ? "変更を保存" : "My Atlasに残す"}
+            </Button>
+          </div>
         </div>
 
-        <aside className="max-h-[92vh] overflow-y-auto border-t border-white/10 bg-white/[0.045] p-5 md:border-l md:border-t-0 md:p-7">
+        <aside className="border-t border-white/10 bg-white/[0.045] p-5 pb-6 md:max-h-[92vh] md:overflow-y-auto md:border-l md:border-t-0 md:p-7">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-cyan-50">
             <Bot className="h-4 w-4" />
             AI整理プレビュー
@@ -495,7 +502,7 @@ export function AddMySpotModal({
             </div>
           </div>
 
-          <Button type="submit" size="lg" className="mt-5 w-full" disabled={!name.trim() && !sourceUrl.trim()}>
+          <Button type="submit" size="lg" className="sticky bottom-3 z-10 mt-5 hidden w-full md:inline-flex" disabled={!name.trim() && !sourceUrl.trim()}>
             {saved ? <Check className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
             {saved ? "My Atlasを更新しました" : editingSpot ? "変更を保存" : "My Atlasに残す"}
           </Button>
