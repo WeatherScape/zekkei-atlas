@@ -13,6 +13,8 @@ export type TravelMapProps = {
   mode?: MapViewMode;
   season?: string;
   selectedTags?: string[];
+  addMode?: boolean;
+  onPickLocation?: (location: { latitude: number; longitude: number }) => void;
   className?: string;
 };
 

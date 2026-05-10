@@ -21,12 +21,16 @@ export function AddMySpotModal({
   onClose,
   initialName = "",
   initialSourceUrl = "",
+  initialLatitude,
+  initialLongitude,
   editingSpot
 }: {
   open: boolean;
   onClose: () => void;
   initialName?: string;
   initialSourceUrl?: string;
+  initialLatitude?: number;
+  initialLongitude?: number;
   editingSpot?: MySpot;
 }) {
   const { addMySpot, updateMySpot } = useMySpots();
@@ -65,12 +69,12 @@ export function AddMySpotModal({
     setImage("");
     setCountry("");
     setRegion("");
-    setLatitude("");
-    setLongitude("");
+    setLatitude(typeof initialLatitude === "number" ? String(initialLatitude) : "");
+    setLongitude(typeof initialLongitude === "number" ? String(initialLongitude) : "");
     setTagsText("");
     setBestSeason([]);
     setStatus("want");
-  }, [editingSpot, initialName, initialSourceUrl, open]);
+  }, [editingSpot, initialLatitude, initialLongitude, initialName, initialSourceUrl, open]);
 
   const draft = useMemo<MySpotDraft>(
     () => ({

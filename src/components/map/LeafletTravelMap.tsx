@@ -163,6 +163,8 @@ export function LeafletTravelMap({
   mode = "all",
   season = "all",
   selectedTags = [],
+  addMode = false,
+  onPickLocation,
   className
 }: TravelMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -375,11 +377,42 @@ export function LeafletTravelMap({
           </div>
         ) : null}
         <p className="mt-2 text-[11px] text-slate-300">
-          ピンをクリックすると詳細が表示されます
+          {addMode ? "地図を動かして中央ピンを合わせます" : "ピンをクリックすると詳細が表示されます"}
         </p>
       </div>
 
-      {selectedSpot ? (
+      {addMode ? (
+        <>
+          <div className="pointer-events-none absolute inset-0 z-[410] flex items-center justify-center">
+            <div className="relative -mt-8">
+              <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/35 bg-cyan-200/10 shadow-[0_0_40px_rgba(103,232,249,0.25)]" />
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-cyan-200 text-slate-950 shadow-glow">
+                <MapPin className="h-6 w-6 fill-slate-950/10" />
+              </div>
+              <div className="mx-auto mt-2 h-3 w-3 rounded-full bg-cyan-200/80 blur-[2px]" />
+            </div>
+          </div>
+          <div className="absolute bottom-3 left-3 right-3 z-[430] rounded-2xl border border-cyan-200/25 bg-slate-950/90 p-3 shadow-glass backdrop-blur-xl md:bottom-4 md:left-1/2 md:right-auto md:w-[360px] md:-translate-x-1/2">
+            <p className="text-sm font-semibold text-white">地図を動かして、行きたい場所を中央に合わせる</p>
+            <p className="mt-1 text-xs leading-6 text-slate-300">
+              スマホでもズレにくいように、タップ位置ではなく地図の中心を保存します。
+            </p>
+            <Button
+              type="button"
+              size="md"
+              className="mt-3 w-full"
+              onClick={() => {
+                const center = mapRef.current?.getCenter();
+                if (!center) return;
+                onPickLocation?.({ latitude: Number(center.lat.toFixed(6)), longitude: Number(center.lng.toFixed(6)) });
+              }}
+            >
+              <MapPin className="h-4 w-4" />
+              この位置で追加
+            </Button>
+          </div>
+        </>
+      ) : selectedSpot ? (
         <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-[410] rounded-2xl border border-cyan-200/25 bg-slate-950/86 p-3 shadow-glass backdrop-blur-xl md:left-auto md:right-4 md:top-4 md:bottom-auto md:w-72">
           <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-cyan-200 px-2.5 py-1 text-[11px] font-semibold text-slate-950">
             <MapPin className="h-3.5 w-3.5" />
@@ -392,7 +425,7 @@ export function LeafletTravelMap({
         </div>
       ) : null}
 
-      {spots.length === 0 ? (
+      {spots.length === 0 && !addMode ? (
         <div className="absolute inset-3 z-[420] flex items-center justify-center rounded-[24px] border border-white/[0.12] bg-slate-950/84 p-6 text-center backdrop-blur-xl">
           <div className="max-w-sm">
             <h3 className="text-xl font-semibold text-white">条件に合う絶景が見つかりませんでした</h3>

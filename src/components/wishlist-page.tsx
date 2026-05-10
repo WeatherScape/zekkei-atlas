@@ -33,7 +33,10 @@ export function WishlistPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSpot, setEditingSpot] = useState<MySpot | undefined>();
   const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [addMode, setAddMode] = useState(false);
+  const [pickedLocation, setPickedLocation] = useState<{ latitude: number; longitude: number } | undefined>();
   const openEditor = (spot: MySpot) => {
+    setPickedLocation(undefined);
     setEditingSpot(spot);
     setModalOpen(true);
   };
@@ -85,6 +88,7 @@ export function WishlistPage() {
                 size="lg"
                 onClick={() => {
                   setEditingSpot(undefined);
+                  setPickedLocation(undefined);
                   setModalOpen(true);
                 }}
               >
@@ -120,19 +124,45 @@ export function WishlistPage() {
             <EmptyAtlas
               onAdd={() => {
                 setEditingSpot(undefined);
+                setPickedLocation(undefined);
                 setModalOpen(true);
               }}
             />
           ) : (
             <div className="space-y-10">
               <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-                <TravelMap
-                  spots={mapSpots}
-                  selectedSpotId={selectedSpot?.id}
-                  onSelect={(spot) => setSelectedId(spot.id)}
-                  onReset={() => setSelectedId(spotsWithLocation[0]?.id)}
-                  className="min-h-[420px] md:min-h-[560px]"
-                />
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-3 rounded-[24px] border border-cyan-200/20 bg-cyan-200/[0.06] p-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-cyan-50">地図の中心で追加</p>
+                      <p className="mt-1 text-xs leading-6 text-slate-300">
+                        地図を動かして中央ピンを合わせるだけ。スマホでもズレにくい登録方法です。
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant={addMode ? "primary" : "secondary"}
+                      size="md"
+                      onClick={() => setAddMode((current) => !current)}
+                    >
+                      <MapPin className="h-4 w-4" />
+                      {addMode ? "追加モード中" : "地図に追加"}
+                    </Button>
+                  </div>
+                  <TravelMap
+                    spots={mapSpots}
+                    selectedSpotId={selectedSpot?.id}
+                    onSelect={(spot) => setSelectedId(spot.id)}
+                    onReset={() => setSelectedId(spotsWithLocation[0]?.id)}
+                    className="min-h-[420px] md:min-h-[560px]"
+                    addMode={addMode}
+                    onPickLocation={(location) => {
+                      setPickedLocation(location);
+                      setEditingSpot(undefined);
+                      setModalOpen(true);
+                    }}
+                  />
+                </div>
                 <GlassPanel className="p-5">
                   {selectedSpot ? (
                     <div>
@@ -192,8 +222,12 @@ export function WishlistPage() {
         onClose={() => {
           setModalOpen(false);
           setEditingSpot(undefined);
+          setPickedLocation(undefined);
+          setAddMode(false);
         }}
         editingSpot={editingSpot}
+        initialLatitude={pickedLocation?.latitude}
+        initialLongitude={pickedLocation?.longitude}
       />
     </main>
   );
