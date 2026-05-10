@@ -1,16 +1,17 @@
 "use client";
 
-import { ExternalLink, MapPin, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ExternalLink, MapPin, MoreHorizontal, Pencil, Star, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { type MySpot } from "@/data/my-spots";
+import { mySpotStatusLabels, type MySpot } from "@/data/my-spots";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const statusLabel: Record<MySpot["status"], string> = {
-  want: "行きたい",
-  planning: "計画中",
-  visited: "行った"
+const statusTone: Record<MySpot["status"], string> = {
+  someday: "bg-violet-300/15 text-violet-100 border-violet-200/25",
+  thisYear: "bg-amber-300/18 text-amber-100 border-amber-200/30",
+  planning: "bg-sky-300/16 text-sky-100 border-sky-200/30",
+  visited: "bg-slate-300/14 text-slate-100 border-slate-200/20"
 };
 
 export function MySpotCard({
@@ -31,20 +32,21 @@ export function MySpotCard({
   className?: string;
 }) {
   const hasLocation = typeof spot.latitude === "number" && typeof spot.longitude === "number";
+  const wishLevel = spot.wishLevel ?? 4;
 
   return (
     <motion.article
       layout
-      whileHover={{ y: -5 }}
+      whileHover={{ y: compact ? -3 : -5 }}
       onClick={() => onSelect?.(spot)}
       className={cn(
-        "group overflow-hidden rounded-[28px] border border-white/[0.12] bg-white/[0.075] shadow-glass backdrop-blur-2xl transition duration-300",
+        "group overflow-hidden rounded-[30px] border border-white/[0.12] bg-white/[0.075] shadow-glass backdrop-blur-2xl transition duration-300",
         selected ? "border-cyan-200/70 ring-2 ring-cyan-200/25" : "hover:border-cyan-200/40",
         onSelect ? "cursor-pointer" : "",
         className
       )}
     >
-      <div className={cn("relative overflow-hidden", compact ? "h-44" : "h-64")}>
+      <div className={cn("relative overflow-hidden", compact ? "h-40" : "h-72")}>
         {spot.image ? (
           <img
             src={spot.image}
@@ -54,9 +56,15 @@ export function MySpotCard({
         ) : (
           <div className="h-full w-full bg-[radial-gradient(circle_at_top_left,rgba(103,232,249,0.22),transparent_35%),linear-gradient(135deg,#082f49,#020617_62%)]" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/38 to-transparent" />
         <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-          <Badge className="bg-slate-950/45">{statusLabel[spot.status]}</Badge>
+          <Badge className={cn("border", statusTone[spot.status])}>{mySpotStatusLabels[spot.status]}</Badge>
+          {spot.tags.includes("一生に一度") ? (
+            <Badge className="border border-amber-200/35 bg-amber-200/15 text-amber-50">
+              <Star className="h-3 w-3" />
+              一生に一度
+            </Badge>
+          ) : null}
           {!hasLocation ? <Badge className="bg-amber-300/15 text-amber-100">位置未設定</Badge> : null}
         </div>
         {onEdit || onRemove ? (
@@ -104,21 +112,40 @@ export function MySpotCard({
         </div>
       </div>
 
-      <div className="space-y-4 p-5">
+      <div className={cn("space-y-4", compact ? "p-4" : "p-5")}>
+        {!compact ? (
+          <p className="text-lg font-semibold leading-8 text-white">
+            {spot.catchCopy || "いつか、を本当に行く日に変える景色。"}
+          </p>
+        ) : null}
+
         {spot.memo && !compact ? (
           <p className="line-clamp-2 text-sm leading-7 text-slate-300">{spot.memo}</p>
         ) : null}
 
         <div className="flex flex-wrap gap-2">
-          {(spot.tags.length ? spot.tags : ["あとで整理"]).slice(0, 5).map((tag) => (
+          {(spot.tags.length ? spot.tags : ["あとで整理"]).slice(0, compact ? 3 : 5).map((tag) => (
             <Badge key={tag}>#{tag}</Badge>
           ))}
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-sm">
+          <Info label="行きたい度" value={`${wishLevel}/5`} />
           <Info label="季節" value={spot.bestSeason.length ? spot.bestSeason.join(" / ") : "未設定"} />
-          <Info label="保存元" value={spot.sourceType} />
+          {!compact ? (
+            <>
+              <Info label="時間帯" value={spot.bestTime?.length ? spot.bestTime.join(" / ") : "未設定"} />
+              <Info label="誰と" value={spot.companion || "あとで決める"} />
+            </>
+          ) : null}
         </div>
+
+        {!compact && spot.firstStepMemo ? (
+          <div className="rounded-2xl border border-cyan-200/15 bg-cyan-200/[0.07] p-4">
+            <p className="text-xs uppercase tracking-[0.16em] text-cyan-100/75">First Step</p>
+            <p className="mt-2 text-sm leading-7 text-white">{spot.firstStepMemo}</p>
+          </div>
+        ) : null}
 
         <div className="flex items-center gap-3">
           {spot.sourceUrl ? (

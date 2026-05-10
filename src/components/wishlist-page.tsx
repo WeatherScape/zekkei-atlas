@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Compass, Loader2, MapPin, Plus, Sparkles } from "lucide-react";
 import { spots } from "@/data/spots";
-import { mySpotToMapSpot, type MySpot } from "@/data/my-spots";
+import { mySpotStatusLabels, mySpotToMapSpot, type MySpot } from "@/data/my-spots";
 import { AddMySpotModal } from "@/components/add-my-spot-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -21,11 +21,7 @@ const starterSpots = spots
   .filter((spot) => ["hateruma", "uyuni", "miyako", "tsunoshima", "shirakawago", "banff"].includes(spot.id))
   .sort((a, b) => b.photoScore - a.photoScore);
 
-const statusLabels: Record<MySpot["status"], string> = {
-  want: "行きたい",
-  planning: "計画中",
-  visited: "行った"
-};
+const statusLabels = mySpotStatusLabels;
 
 export function WishlistPage() {
   const { isReady, mySpots, removeMySpot } = useMySpots();
@@ -400,7 +396,7 @@ function groupBySeason(items: MySpot[]) {
 }
 
 function groupByStatus(items: MySpot[]) {
-  return (["want", "planning", "visited"] as const)
+  return (["someday", "thisYear", "planning", "visited"] as const)
     .map((status) => ({ label: statusLabels[status], spots: items.filter((spot) => spot.status === status) }))
     .filter((group) => group.spots.length > 0);
 }

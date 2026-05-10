@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { spots, type Spot } from "@/data/spots";
 import {
   enrichDraftSpot,
+  normalizeMySpotStatus,
   officialSpotToMySpot,
   type MySpot,
   type MySpotDraft
@@ -47,7 +48,14 @@ function sanitizeMySpot(value: unknown): MySpot | null {
     bestSeason: Array.isArray(item.bestSeason)
       ? item.bestSeason.filter((season): season is string => typeof season === "string")
       : [],
-    status: item.status ?? "want",
+    status: normalizeMySpotStatus(item.status),
+    wishLevel: typeof item.wishLevel === "number" ? Math.min(5, Math.max(1, item.wishLevel)) : undefined,
+    companion: item.companion ? String(item.companion) : undefined,
+    bestTime: Array.isArray(item.bestTime)
+      ? item.bestTime.filter((time): time is string => typeof time === "string")
+      : undefined,
+    firstStepMemo: item.firstStepMemo ? String(item.firstStepMemo) : undefined,
+    catchCopy: item.catchCopy ? String(item.catchCopy) : undefined,
     createdAt: item.createdAt ?? new Date().toISOString(),
     updatedAt: item.updatedAt ?? new Date().toISOString()
   };
@@ -168,7 +176,12 @@ export function useMySpots() {
       longitude: enriched.longitude,
       tags: enriched.tags ?? [],
       bestSeason: enriched.bestSeason ?? [],
-      status: enriched.status ?? "want",
+      status: normalizeMySpotStatus(enriched.status),
+      wishLevel: enriched.wishLevel,
+      companion: enriched.companion?.trim() || undefined,
+      bestTime: enriched.bestTime ?? [],
+      firstStepMemo: enriched.firstStepMemo?.trim() || undefined,
+      catchCopy: enriched.catchCopy?.trim() || undefined,
       createdAt: now,
       updatedAt: now
     };

@@ -36,19 +36,22 @@ function getSeasonLabel(season?: string) {
   return season && season !== "all" ? season : "すべての季節";
 }
 
-function getPinTone(photoScore: number) {
-  if (photoScore >= 90) return "high";
-  if (photoScore >= 80) return "mid";
-  return "low";
+function getStatusFromSpot(spot: Spot) {
+  const status = spot.travelStyle.find((item) => item.startsWith("status:"))?.replace("status:", "");
+  if (status === "thisYear" || status === "planning" || status === "visited" || status === "someday") {
+    return status;
+  }
+  return "someday";
 }
 
-function buildMarkerIcon(L: LeafletModule, selected: boolean, photoScore: number) {
-  const tone = getPinTone(photoScore);
-  const size = selected ? 36 : tone === "high" ? 28 : tone === "low" ? 20 : 24;
+function buildMarkerIcon(L: LeafletModule, spot: Spot, selected: boolean) {
+  const status = getStatusFromSpot(spot);
+  const lifetime = spot.tags.includes("一生に一度");
+  const size = selected ? 40 : lifetime ? 34 : status === "thisYear" ? 30 : 26;
 
   return L.divIcon({
     className: "",
-    html: `<span class="zekkei-map-pin zekkei-map-pin-${tone}${selected ? " zekkei-map-pin-selected" : ""}"><span></span></span>`,
+    html: `<span class="zekkei-map-pin zekkei-map-pin-${status}${lifetime ? " zekkei-map-pin-lifetime" : ""}${selected ? " zekkei-map-pin-selected" : ""}"><span>${lifetime ? "★" : ""}</span></span>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2]
   });
@@ -88,20 +91,17 @@ function groupSpotsByScreenDistance(
     if (used.has(item.spot.id)) return;
     const group = projected.filter((candidate) => {
       if (used.has(candidate.spot.id)) return false;
-      const distance = item.point.distanceTo(candidate.point);
-      return distance <= threshold;
+      return item.point.distanceTo(candidate.point) <= threshold;
     });
     group.forEach((candidate) => used.add(candidate.spot.id));
-    const centerLat =
-      group.reduce((sum, candidate) => sum + candidate.spot.latitude, 0) / group.length;
-    const centerLng =
-      group.reduce((sum, candidate) => sum + candidate.spot.longitude, 0) / group.length;
     const hasSelected = group.some((candidate) => candidate.spot.id === selectedSpotId);
 
     if (hasSelected && group.length > 1) {
       const selected = group.find((candidate) => candidate.spot.id === selectedSpotId);
       const rest = group.filter((candidate) => candidate.spot.id !== selectedSpotId);
-      if (selected) groups.push({ spots: [selected.spot], center: [selected.spot.latitude, selected.spot.longitude] });
+      if (selected) {
+        groups.push({ spots: [selected.spot], center: [selected.spot.latitude, selected.spot.longitude] });
+      }
       if (rest.length) {
         groups.push({
           spots: rest.map((candidate) => candidate.spot),
@@ -114,7 +114,13 @@ function groupSpotsByScreenDistance(
       return;
     }
 
-    groups.push({ spots: group.map((candidate) => candidate.spot), center: [centerLat, centerLng] });
+    groups.push({
+      spots: group.map((candidate) => candidate.spot),
+      center: [
+        group.reduce((sum, candidate) => sum + candidate.spot.latitude, 0) / group.length,
+        group.reduce((sum, candidate) => sum + candidate.spot.longitude, 0) / group.length
+      ]
+    });
   });
 
   return groups;
@@ -263,13 +269,13 @@ export function LeafletTravelMap({
       group.spots.forEach((spot) => {
         const selected = spot.id === current.selectedSpotId;
         const marker = L.marker([spot.latitude, spot.longitude], {
-          icon: buildMarkerIcon(L, selected, spot.photoScore),
+          icon: buildMarkerIcon(L, spot, selected),
           keyboard: true,
           zIndexOffset: selected ? 1000 : 0
         });
         marker.bindTooltip(spot.name, {
           direction: "top",
-          offset: [0, selected ? -20 : -15],
+          offset: [0, selected ? -22 : -16],
           opacity: 0.96
         });
         marker.on("click", () => {
@@ -288,18 +294,16 @@ export function LeafletTravelMap({
   return (
     <section
       className={cn(
-        "relative min-h-[380px] overflow-hidden rounded-[28px] border border-white/[0.12] bg-slate-950 shadow-glass md:min-h-[620px]",
+        "relative min-h-[440px] overflow-hidden rounded-[28px] border border-white/[0.12] bg-slate-950 shadow-glass md:min-h-[calc(100vh-11rem)]",
         className
       )}
     >
       <div ref={mapContainerRef} className="absolute inset-0 z-0" />
 
-      <div className="pointer-events-none absolute left-3 top-3 z-[410] max-w-[calc(100%-1.5rem)] rounded-2xl border border-white/[0.14] bg-slate-950/82 px-4 py-3 shadow-glass backdrop-blur-xl md:left-4 md:top-4">
-        <p className="text-xs font-semibold text-white md:text-sm">
-          {modeLabels[mode]}
-        </p>
+      <div className="pointer-events-none absolute left-3 top-3 z-[410] max-w-[calc(100%-1.5rem)] rounded-2xl border border-white/[0.14] bg-slate-950/78 px-4 py-3 shadow-glass backdrop-blur-xl md:left-4 md:top-4">
+        <p className="text-xs font-semibold text-white md:text-sm">{modeLabels[mode]}</p>
         <p className="mt-1 text-xs text-cyan-100">
-          {season !== "all" ? `${getSeasonLabel(season)}におすすめの絶景 ${spots.length}件` : `${spots.length}件のスポットを表示中`}
+          {season !== "all" ? `${getSeasonLabel(season)}の景色 ${spots.length}件` : `${spots.length}件の景色を表示中`}
         </p>
         {selectedTags.length > 0 ? (
           <div className="mt-2 flex max-w-[260px] flex-wrap gap-1.5">
@@ -308,7 +312,7 @@ export function LeafletTravelMap({
                 key={tag}
                 className="rounded-full border border-cyan-200/30 bg-cyan-200/10 px-2 py-0.5 text-[10px] font-semibold text-cyan-50"
               >
-                #{tag === "島" ? "離島" : tag}
+                #{tag}
               </span>
             ))}
             {selectedTags.length > 4 ? (
@@ -319,7 +323,7 @@ export function LeafletTravelMap({
           </div>
         ) : null}
         <p className="mt-2 text-[11px] text-slate-300">
-          {addMode ? "地図を動かして中央ピンを合わせます" : "ピンをクリックすると詳細が表示されます"}
+          {addMode ? "地図を動かして中央ピンを合わせます" : "ピンをクリックすると詳細が開きます"}
         </p>
       </div>
 
@@ -354,25 +358,14 @@ export function LeafletTravelMap({
             </Button>
           </div>
         </>
-      ) : selectedSpot ? (
-        <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-[410] rounded-2xl border border-cyan-200/25 bg-slate-950/86 p-3 shadow-glass backdrop-blur-xl md:left-auto md:right-4 md:top-4 md:bottom-auto md:w-72">
-          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-cyan-200 px-2.5 py-1 text-[11px] font-semibold text-slate-950">
-            <MapPin className="h-3.5 w-3.5" />
-            選択中
-          </div>
-          <h3 className="text-lg font-semibold text-white">{selectedSpot.name}</h3>
-          <p className="mt-1 text-xs text-cyan-100">
-            {selectedSpot.region} / {selectedSpot.country}
-          </p>
-        </div>
       ) : null}
 
       {spots.length === 0 && !addMode ? (
         <div className="absolute inset-3 z-[420] flex items-center justify-center rounded-[24px] border border-white/[0.12] bg-slate-950/84 p-6 text-center backdrop-blur-xl">
           <div className="max-w-sm">
-            <h3 className="text-xl font-semibold text-white">条件に合う絶景が見つかりませんでした</h3>
+            <h3 className="text-xl font-semibold text-white">まだ地図に表示できる景色がありません</h3>
             <p className="mt-2 text-sm leading-7 text-slate-300">
-              フィルターをリセットして探してみてください。
+              場所を追加するか、フィルターをリセットして探してみてください。
             </p>
             <Button className="mt-5" onClick={onReset}>
               <RotateCcw className="h-4 w-4" />

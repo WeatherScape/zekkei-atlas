@@ -2,7 +2,14 @@
 
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { Bot, Check, ImageIcon, LinkIcon, MapPin, Sparkles, X } from "lucide-react";
-import { enrichDraftSpot, type MySpot, type MySpotDraft, type MySpotStatus } from "@/data/my-spots";
+import {
+  enrichDraftSpot,
+  mySpotStatusLabels,
+  normalizeMySpotStatus,
+  type MySpot,
+  type MySpotDraft,
+  type MySpotStatus
+} from "@/data/my-spots";
 import { seasonOptions } from "@/data/spots";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,10 +18,13 @@ import { useMySpots } from "@/hooks/use-my-spots";
 import { cn } from "@/lib/utils";
 
 const statusOptions: Array<{ value: MySpotStatus; label: string }> = [
-  { value: "want", label: "行きたい" },
+  { value: "someday", label: "いつか行きたい" },
+  { value: "thisYear", label: "今年行きたい" },
   { value: "planning", label: "計画中" },
   { value: "visited", label: "行った" }
 ];
+
+const bestTimeOptions = ["朝", "昼", "夕方", "夜"];
 
 export function AddMySpotModal({
   open,
@@ -44,7 +54,12 @@ export function AddMySpotModal({
   const [longitude, setLongitude] = useState("");
   const [tagsText, setTagsText] = useState("");
   const [bestSeason, setBestSeason] = useState<string[]>([]);
-  const [status, setStatus] = useState<MySpotStatus>("want");
+  const [bestTime, setBestTime] = useState<string[]>([]);
+  const [status, setStatus] = useState<MySpotStatus>("someday");
+  const [wishLevel, setWishLevel] = useState(4);
+  const [companion, setCompanion] = useState("");
+  const [firstStepMemo, setFirstStepMemo] = useState("");
+  const [catchCopy, setCatchCopy] = useState("");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -60,7 +75,12 @@ export function AddMySpotModal({
       setLongitude(typeof editingSpot.longitude === "number" ? String(editingSpot.longitude) : "");
       setTagsText(editingSpot.tags.join(", "));
       setBestSeason(editingSpot.bestSeason);
+      setBestTime(editingSpot.bestTime ?? []);
       setStatus(editingSpot.status);
+      setWishLevel(editingSpot.wishLevel ?? 4);
+      setCompanion(editingSpot.companion ?? "");
+      setFirstStepMemo(editingSpot.firstStepMemo ?? "");
+      setCatchCopy(editingSpot.catchCopy ?? "");
       return;
     }
     setName(initialName);
@@ -73,7 +93,12 @@ export function AddMySpotModal({
     setLongitude(typeof initialLongitude === "number" ? String(initialLongitude) : "");
     setTagsText("");
     setBestSeason([]);
-    setStatus("want");
+    setBestTime([]);
+    setStatus("someday");
+    setWishLevel(4);
+    setCompanion("");
+    setFirstStepMemo("");
+    setCatchCopy("");
   }, [editingSpot, initialLatitude, initialLongitude, initialName, initialSourceUrl, open]);
 
   const draft = useMemo<MySpotDraft>(
@@ -87,13 +112,35 @@ export function AddMySpotModal({
       latitude: Number.isFinite(Number(latitude)) && latitude.trim() ? Number(latitude) : undefined,
       longitude: Number.isFinite(Number(longitude)) && longitude.trim() ? Number(longitude) : undefined,
       tags: tagsText
-        .split(/[、,\s]+/)
+        .split(/[,、\s]+/)
         .map((tag) => tag.trim())
         .filter(Boolean),
       bestSeason,
-      status
+      bestTime,
+      status,
+      wishLevel,
+      companion,
+      firstStepMemo,
+      catchCopy
     }),
-    [bestSeason, country, image, latitude, longitude, memo, name, region, sourceUrl, status, tagsText]
+    [
+      bestSeason,
+      bestTime,
+      catchCopy,
+      companion,
+      country,
+      firstStepMemo,
+      image,
+      latitude,
+      longitude,
+      memo,
+      name,
+      region,
+      sourceUrl,
+      status,
+      tagsText,
+      wishLevel
+    ]
   );
 
   const preview = useMemo(() => enrichDraftSpot(draft), [draft]);
@@ -106,26 +153,40 @@ export function AddMySpotModal({
     );
   };
 
+  const toggleBestTime = (time: string) => {
+    setBestTime((current) =>
+      current.includes(time) ? current.filter((item) => item !== time) : [...current, time]
+    );
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const patch = {
+      name: preview.name?.trim() || "名前未設定の絶景",
+      sourceUrl: preview.sourceUrl?.trim() || undefined,
+      sourceType: preview.sourceType ?? "other",
+      memo: preview.memo?.trim() || undefined,
+      image: preview.image?.trim() || undefined,
+      country: preview.country?.trim() || undefined,
+      region: preview.region?.trim() || undefined,
+      latitude: preview.latitude,
+      longitude: preview.longitude,
+      tags: preview.tags ?? [],
+      bestSeason: preview.bestSeason ?? [],
+      bestTime: preview.bestTime ?? [],
+      status: normalizeMySpotStatus(preview.status),
+      wishLevel: preview.wishLevel,
+      companion: preview.companion?.trim() || undefined,
+      firstStepMemo: preview.firstStepMemo?.trim() || undefined,
+      catchCopy: preview.catchCopy?.trim() || undefined
+    };
+
     if (editingSpot) {
-      updateMySpot(editingSpot.id, {
-        name: preview.name?.trim() || "名前未設定の絶景",
-        sourceUrl: preview.sourceUrl?.trim() || undefined,
-        sourceType: preview.sourceType ?? "other",
-        memo: preview.memo?.trim() || undefined,
-        image: preview.image?.trim() || undefined,
-        country: preview.country?.trim() || undefined,
-        region: preview.region?.trim() || undefined,
-        latitude: preview.latitude,
-        longitude: preview.longitude,
-        tags: preview.tags ?? [],
-        bestSeason: preview.bestSeason ?? [],
-        status: preview.status ?? "want"
-      });
+      updateMySpot(editingSpot.id, patch);
     } else {
-      addMySpot(preview);
+      addMySpot(patch);
     }
+
     setSaved(true);
     window.setTimeout(() => {
       setSaved(false);
@@ -146,10 +207,10 @@ export function AddMySpotModal({
                 Add to My Atlas
               </Badge>
               <h2 className="text-3xl font-semibold text-white">
-                {editingSpot ? "My Spotを編集" : "SNSで見つけた絶景を追加"}
+                {editingSpot ? "My Spotを編集" : "行きたい景色を追加"}
               </h2>
               <p className="mt-2 text-sm leading-7 text-slate-300">
-                URLや場所名を貼るだけで、タグや季節をAI風に整理して保存できます。
+                SNS URL、場所名、メモを残して、いつか行きたいを本当に行く候補に育てます。
               </p>
             </div>
             <button
@@ -162,7 +223,7 @@ export function AddMySpotModal({
           </div>
 
           <div className="mb-6 grid grid-cols-3 gap-2 text-xs">
-            {["1. 貼る", "2. 整理", "3. 保存"].map((step, index) => (
+            {["1. 残す", "2. 整える", "3. 旅に近づける"].map((step, index) => (
               <div
                 key={step}
                 className={cn(
@@ -223,7 +284,7 @@ export function AddMySpotModal({
                 <input
                   value={tagsText}
                   onChange={(event) => setTagsText(event.target.value)}
-                  placeholder="海, 星空, カップル"
+                  placeholder="海, 星空, 恋人と行きたい"
                   className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
                 />
               </Field>
@@ -267,37 +328,78 @@ export function AddMySpotModal({
               </Field>
             </div>
 
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                行きたい季節
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {seasonOptions.map((season) => (
-                  <FilterChip
-                    key={season}
-                    label={season}
-                    active={bestSeason.includes(season)}
-                    onClick={() => toggleSeason(season)}
-                  />
-                ))}
-              </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="誰と行きたい">
+                <input
+                  value={companion}
+                  onChange={(event) => setCompanion(event.target.value)}
+                  placeholder="恋人、友達、家族、ひとり..."
+                  className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
+                />
+              </Field>
+              <Field label="最初の一歩メモ">
+                <input
+                  value={firstStepMemo}
+                  onChange={(event) => setFirstStepMemo(event.target.value)}
+                  placeholder="航空券を見る、季節を調べる、宿を探す..."
+                  className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
+                />
+              </Field>
             </div>
 
+            <Field label="キャッチコピー">
+              <input
+                value={catchCopy}
+                onChange={(event) => setCatchCopy(event.target.value)}
+                placeholder="例: 一生に一度、星が海に落ちる夜を見に行く。"
+                className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
+              />
+            </Field>
+
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                ステータス
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {statusOptions.map((item) => (
-                  <FilterChip
-                    key={item.value}
-                    label={item.label}
-                    active={status === item.value}
-                    onClick={() => setStatus(item.value)}
-                  />
-                ))}
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  行きたい度
+                </p>
+                <span className="text-sm font-semibold text-cyan-100">{wishLevel}/5</span>
               </div>
+              <input
+                type="range"
+                min={1}
+                max={5}
+                value={wishLevel}
+                onChange={(event) => setWishLevel(Number(event.target.value))}
+                className="w-full accent-cyan-200"
+              />
             </div>
+
+            <ChoiceGroup label="行きたい季節">
+              {seasonOptions.map((season) => (
+                <FilterChip
+                  key={season}
+                  label={season}
+                  active={bestSeason.includes(season)}
+                  onClick={() => toggleSeason(season)}
+                />
+              ))}
+            </ChoiceGroup>
+
+            <ChoiceGroup label="見たい時間帯">
+              {bestTimeOptions.map((time) => (
+                <FilterChip key={time} label={time} active={bestTime.includes(time)} onClick={() => toggleBestTime(time)} />
+              ))}
+            </ChoiceGroup>
+
+            <ChoiceGroup label="ステータス">
+              {statusOptions.map((item) => (
+                <FilterChip
+                  key={item.value}
+                  label={item.label}
+                  active={status === item.value}
+                  onClick={() => setStatus(item.value)}
+                />
+              ))}
+            </ChoiceGroup>
           </div>
         </div>
 
@@ -327,6 +429,9 @@ export function AddMySpotModal({
               </div>
             </div>
             <div className="space-y-4 p-5">
+              <p className="text-lg font-semibold leading-8 text-white">
+                {preview.catchCopy || "いつか、を本当に行く日に変える景色。"}
+              </p>
               <div className="flex flex-wrap gap-2">
                 {(preview.tags?.length ? preview.tags : ["あとで整理"]).map((tag) => (
                   <Badge key={tag}>#{tag}</Badge>
@@ -334,12 +439,14 @@ export function AddMySpotModal({
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <PreviewMetric label="季節" value={preview.bestSeason?.join(" / ") || "未設定"} />
-                <PreviewMetric label="保存元" value={preview.sourceType || "other"} />
+                <PreviewMetric label="時間帯" value={preview.bestTime?.join(" / ") || "未設定"} />
+                <PreviewMetric label="行きたい度" value={`${preview.wishLevel ?? wishLevel}/5`} />
+                <PreviewMetric label="状態" value={mySpotStatusLabels[(preview.status ?? "someday") as MySpotStatus]} />
                 <PreviewMetric
                   label="地図"
                   value={typeof preview.latitude === "number" && typeof preview.longitude === "number" ? "表示できます" : "位置未設定"}
                 />
-                <PreviewMetric label="状態" value={statusOptions.find((item) => item.value === preview.status)?.label || "行きたい"} />
+                <PreviewMetric label="保存元" value={preview.sourceType || "other"} />
               </div>
               {preview.memo ? (
                 <p className="rounded-2xl border border-white/10 bg-white/[0.05] p-4 text-sm leading-7 text-slate-300">
@@ -351,7 +458,7 @@ export function AddMySpotModal({
 
           <Button type="submit" size="lg" className="mt-5 w-full" disabled={!name.trim() && !sourceUrl.trim()}>
             {saved ? <Check className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
-            {saved ? "My Atlasを更新しました" : editingSpot ? "変更を保存" : "My Atlasに保存"}
+            {saved ? "My Atlasを更新しました" : editingSpot ? "変更を保存" : "My Atlasに残す"}
           </Button>
           <p className="mt-3 text-xs leading-6 text-slate-400">
             本物のSNS連携や投稿解析は使わず、入力内容とローカルデータで整理しています。
@@ -379,6 +486,17 @@ function Field({
       </span>
       {children}
     </label>
+  );
+}
+
+function ChoiceGroup({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-2">{children}</div>
+    </div>
   );
 }
 

@@ -105,51 +105,77 @@ textarea {
 
 .zekkei-map-pin {
   align-items: center;
-  background: rgba(2, 6, 23, 0.88);
-  border: 2px solid rgba(103, 232, 249, 0.92);
+  background: rgba(2, 6, 23, 0.9);
+  border: 2px solid rgba(196, 181, 253, 0.92);
   border-radius: 999px;
-  box-shadow: 0 0 0 4px rgba(103, 232, 249, 0.12), 0 12px 32px rgba(2, 6, 23, 0.48);
+  box-shadow: 0 0 0 5px rgba(196, 181, 253, 0.13), 0 14px 34px rgba(2, 6, 23, 0.5);
   display: flex;
-  height: 24px;
+  height: 26px;
   justify-content: center;
-  width: 24px;
+  transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+  width: 26px;
 }
 
-.zekkei-map-pin-high {
-  border-color: rgba(165, 243, 252, 0.96);
-  box-shadow: 0 0 0 5px rgba(103, 232, 249, 0.13), 0 0 24px rgba(103, 232, 249, 0.28), 0 12px 32px rgba(2, 6, 23, 0.48);
-  height: 28px;
-  width: 28px;
+.zekkei-map-pin-thisYear {
+  border-color: rgba(253, 224, 71, 0.96);
+  box-shadow: 0 0 0 6px rgba(253, 224, 71, 0.13), 0 0 24px rgba(250, 204, 21, 0.26), 0 14px 34px rgba(2, 6, 23, 0.48);
+  height: 30px;
+  width: 30px;
 }
 
-.zekkei-map-pin-mid {
-  height: 24px;
-  width: 24px;
+.zekkei-map-pin-planning {
+  border-color: rgba(125, 211, 252, 0.96);
+  box-shadow: 0 0 0 5px rgba(125, 211, 252, 0.14), 0 0 22px rgba(56, 189, 248, 0.25), 0 14px 34px rgba(2, 6, 23, 0.48);
 }
 
-.zekkei-map-pin-low {
-  border-color: rgba(125, 211, 252, 0.7);
-  box-shadow: 0 0 0 3px rgba(103, 232, 249, 0.08), 0 10px 28px rgba(2, 6, 23, 0.42);
-  height: 20px;
-  opacity: 0.82;
-  width: 20px;
+.zekkei-map-pin-visited {
+  border-color: rgba(203, 213, 225, 0.72);
+  box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.1), 0 12px 30px rgba(2, 6, 23, 0.46);
+  opacity: 0.78;
+}
+
+.zekkei-map-pin-lifetime {
+  border-color: rgba(251, 191, 36, 0.98);
+  box-shadow: 0 0 0 7px rgba(251, 191, 36, 0.14), 0 0 30px rgba(251, 191, 36, 0.34), 0 16px 40px rgba(2, 6, 23, 0.52);
+  height: 34px;
+  width: 34px;
 }
 
 .zekkei-map-pin > span {
-  background: #67e8f9;
+  align-items: center;
+  background: #c4b5fd;
   border-radius: 999px;
-  display: block;
-  height: 8px;
+  color: #020617;
+  display: flex;
+  font-size: 11px;
+  font-weight: 900;
+  height: 9px;
+  justify-content: center;
+  line-height: 1;
   width: 8px;
+}
+
+.zekkei-map-pin-thisYear > span,
+.zekkei-map-pin-lifetime > span {
+  background: #fde047;
+}
+
+.zekkei-map-pin-planning > span {
+  background: #7dd3fc;
+}
+
+.zekkei-map-pin-visited > span {
+  background: #cbd5e1;
 }
 
 .zekkei-map-pin-selected {
   background: #67e8f9;
   border-color: #ffffff;
   box-shadow: 0 0 0 7px rgba(103, 232, 249, 0.2), 0 0 34px rgba(103, 232, 249, 0.72), 0 18px 44px rgba(2, 6, 23, 0.5);
-  height: 36px;
+  height: 40px;
   opacity: 1;
-  width: 36px;
+  transform: scale(1.04);
+  width: 40px;
 }
 
 .zekkei-map-pin-selected > span {
