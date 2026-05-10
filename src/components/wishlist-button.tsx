@@ -2,7 +2,7 @@
 
 import { Heart } from "lucide-react";
 import { Button, ButtonProps } from "@/components/ui/button";
-import { useWishlist } from "@/hooks/use-wishlist";
+import { useMySpots } from "@/hooks/use-my-spots";
 import { cn } from "@/lib/utils";
 
 export function WishlistButton({
@@ -20,7 +20,7 @@ export function WishlistButton({
   variant?: ButtonProps["variant"];
   size?: ButtonProps["size"];
 }) {
-  const { isSaved, toggleSpot } = useWishlist();
+  const { isSaved, importFromOfficialSpot } = useMySpots();
   const saved = isSaved(spotId);
 
   return (
@@ -32,7 +32,7 @@ export function WishlistButton({
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        toggleSpot(spotId);
+        importFromOfficialSpot(spotId);
       }}
       aria-pressed={saved}
     >

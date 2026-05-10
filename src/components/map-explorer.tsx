@@ -2,37 +2,19 @@
 
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Bot,
-  Camera,
-  Clock,
-  Filter,
-  MapPin,
-  RotateCcw,
-  Search,
-  SlidersHorizontal,
-  Sparkles,
-  Wallet
-} from "lucide-react";
-import {
-  seasonOptions,
-  spots,
-  timeOptions,
-  travelStyleOptions,
-  Spot
-} from "@/data/spots";
+import { Bot, Filter, MapPin, Plus, RotateCcw, Search, Sparkles } from "lucide-react";
+import { seasonOptions, spots } from "@/data/spots";
+import { mySpotToMapSpot, type MySpot } from "@/data/my-spots";
+import { AddMySpotModal } from "@/components/add-my-spot-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { FilterChip } from "@/components/filter-chip";
 import { GlassPanel } from "@/components/ui/glass-panel";
+import { MySpotCard } from "@/components/my-spot-card";
 import { SpotCard } from "@/components/spot-card";
-import { WishlistButton } from "@/components/wishlist-button";
 import { TravelMap, type MapViewMode } from "@/components/map/TravelMap";
-import { budgetLabel, difficultyLabel, isDomestic, normalizeText } from "@/lib/utils";
-
-type ScopeFilter = "all" | "domestic" | "overseas";
-type DifficultyFilter = "all" | Spot["difficulty"];
+import { useMySpots } from "@/hooks/use-my-spots";
+import { normalizeText } from "@/lib/utils";
 
 type MapExplorerProps = {
   initialSearch?: string;
@@ -45,127 +27,100 @@ type MapExplorerProps = {
 };
 
 const modeOptions: Array<{ value: MapViewMode; label: string; description: string }> = [
-  { value: "all", label: "すべて", description: "全スポット" },
-  { value: "japan", label: "日本", description: "日本列島" },
-  { value: "okinawa", label: "沖縄・離島", description: "南西諸島" },
-  { value: "overseas", label: "海外", description: "海外スポット" }
+  { value: "all", label: "すべて", description: "My Atlas全体" },
+  { value: "japan", label: "日本", description: "国内候補" },
+  { value: "okinawa", label: "沖縄・離島", description: "島旅候補" },
+  { value: "overseas", label: "海外", description: "海外候補" }
 ];
 
-const scenicTypeFilters = [
-  { label: "星空", value: "星空" },
-  { label: "海", value: "海" },
-  { label: "紅葉", value: "紅葉" },
-  { label: "雪", value: "雪" },
-  { label: "雲海", value: "雲海" },
-  { label: "滝", value: "滝" },
-  { label: "夕日", value: "夕日" },
-  { label: "離島", value: "島" },
-  { label: "ドライブ", value: "ドライブ" },
-  { label: "カップル", value: "カップル" },
-  { label: "一生に一度", value: "一生に一度" }
-];
+const scenicTypeFilters = ["星空", "海", "紅葉", "雪", "雲海", "滝", "夕日", "離島", "ドライブ", "カップル", "一生に一度"];
+const starterSpots = spots.filter((spot) => ["hateruma", "miyako", "uyuni", "tsunoshima"].includes(spot.id));
 
-const islandIds = new Set(["ishigaki", "hateruma", "miyako", "taketomi", "kouri", "yakushima", "okunoshima"]);
+function normalizeTagFilter(tag: string) {
+  return tag === "島" ? "離島" : tag;
+}
 
-function spotMatchesKeyword(spot: Spot, keyword: string) {
+function spotMatchesMode(spot: MySpot, mode: MapViewMode) {
+  if (mode === "all") return true;
+  if (mode === "japan") return spot.country === "日本";
+  if (mode === "okinawa") {
+    const text = normalizeText([spot.name, spot.region, spot.country, ...spot.tags].join(" "));
+    return text.includes("沖縄") || text.includes("離島") || text.includes("island");
+  }
+  return spot.country ? spot.country !== "日本" : false;
+}
+
+function spotMatchesKeyword(spot: MySpot, keyword: string) {
   if (!keyword.trim()) return true;
   const haystack = normalizeText(
     [
       spot.name,
+      spot.sourceUrl,
+      spot.memo,
       spot.country,
       spot.region,
-      spot.description,
+      spot.sourceType,
       ...spot.tags,
-      ...spot.bestSeason,
-      ...spot.bestTime,
-      ...spot.travelStyle
-    ].join(" ")
+      ...spot.bestSeason
+    ]
+      .filter(Boolean)
+      .join(" ")
   );
   return haystack.includes(normalizeText(keyword));
-}
-
-function spotMatchesMode(spot: Spot, mode: MapViewMode) {
-  if (mode === "all") return true;
-  if (mode === "japan") return isDomestic(spot);
-  if (mode === "okinawa") return islandIds.has(spot.id) || spot.region === "沖縄県";
-  return !isDomestic(spot);
-}
-
-function validOrAll(value: string | undefined, options: string[]) {
-  return value && options.includes(value) ? value : "all";
-}
-
-function normalizeTagFilter(tag: string) {
-  return tag === "離島" ? "島" : tag;
-}
-
-function getTagLabel(tag: string) {
-  return tag === "島" ? "離島" : tag;
 }
 
 export function MapExplorer({
   initialSearch = "",
   initialTag = "",
-  initialStyle = "",
-  initialSeason = "",
-  initialTime = "",
-  initialScope = "",
-  initialDifficulty = ""
+  initialSeason = ""
 }: MapExplorerProps) {
+  const { isReady, mySpots, removeMySpot } = useMySpots();
   const [keyword, setKeyword] = useState(initialSearch);
-  const [selectedTags, setSelectedTags] = useState<string[]>(initialTag ? [normalizeTagFilter(initialTag)] : []);
-  const [season, setSeason] = useState(validOrAll(initialSeason, seasonOptions));
-  const [time, setTime] = useState(validOrAll(initialTime, timeOptions));
-  const [style, setStyle] = useState(validOrAll(initialStyle, travelStyleOptions));
-  const [scope, setScope] = useState<ScopeFilter>(
-    ["all", "domestic", "overseas"].includes(initialScope) ? (initialScope as ScopeFilter) : "all"
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    initialTag ? [normalizeTagFilter(initialTag)] : []
   );
-  const [difficulty, setDifficulty] = useState<DifficultyFilter>(
-    ["all", "easy", "normal", "hard"].includes(initialDifficulty)
-      ? (initialDifficulty as DifficultyFilter)
-      : "all"
-  );
+  const [season, setSeason] = useState(seasonOptions.includes(initialSeason) ? initialSeason : "all");
   const [mode, setMode] = useState<MapViewMode>("all");
-  const [selectedSpotId, setSelectedSpotId] = useState(spots[0].id);
+  const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingSpot, setEditingSpot] = useState<MySpot | undefined>();
+  const openEditor = (spot: MySpot) => {
+    setEditingSpot(spot);
+    setModalOpen(true);
+  };
 
   const filteredSpots = useMemo(() => {
-    return spots
+    return mySpots
       .filter((spot) => spotMatchesKeyword(spot, keyword))
       .filter((spot) => selectedTags.every((tag) => spot.tags.includes(tag)))
       .filter((spot) => (season === "all" ? true : spot.bestSeason.includes(season)))
-      .filter((spot) => (time === "all" ? true : spot.bestTime.includes(time)))
-      .filter((spot) => (style === "all" ? true : spot.travelStyle.includes(style)))
-      .filter((spot) => {
-        if (scope === "domestic") return isDomestic(spot);
-        if (scope === "overseas") return !isDomestic(spot);
-        return true;
-      })
-      .filter((spot) => (difficulty === "all" ? true : spot.difficulty === difficulty))
-      .sort((a, b) => b.photoScore - a.photoScore);
-  }, [difficulty, keyword, scope, season, selectedTags, style, time]);
+      .filter((spot) => spotMatchesMode(spot, mode))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  }, [keyword, mode, mySpots, season, selectedTags]);
 
-  const visibleSpots = useMemo(
-    () => filteredSpots.filter((spot) => spotMatchesMode(spot, mode)),
-    [filteredSpots, mode]
+  const locatedSpots = useMemo(
+    () => filteredSpots.filter((spot) => typeof spot.latitude === "number" && typeof spot.longitude === "number"),
+    [filteredSpots]
   );
+  const unlocatedSpots = useMemo(
+    () => filteredSpots.filter((spot) => typeof spot.latitude !== "number" || typeof spot.longitude !== "number"),
+    [filteredSpots]
+  );
+  const mapSpots = useMemo(() => locatedSpots.map(mySpotToMapSpot), [locatedSpots]);
 
   useEffect(() => {
-    if (visibleSpots.length === 0) return;
-    if (!visibleSpots.some((spot) => spot.id === selectedSpotId)) {
-      setSelectedSpotId(visibleSpots[0].id);
+    if (!filteredSpots.length) {
+      setSelectedId(undefined);
+      return;
     }
-  }, [selectedSpotId, visibleSpots]);
+    if (!selectedId || !filteredSpots.some((spot) => spot.id === selectedId)) {
+      setSelectedId(filteredSpots[0].id);
+    }
+  }, [filteredSpots, selectedId]);
 
-  const selectedSpot = visibleSpots.find((spot) => spot.id === selectedSpotId) ?? visibleSpots[0];
-
+  const selectedSpot = filteredSpots.find((spot) => spot.id === selectedId) ?? filteredSpots[0];
   const activeFilterCount =
-    selectedTags.length +
-    (season !== "all" ? 1 : 0) +
-    (time !== "all" ? 1 : 0) +
-    (style !== "all" ? 1 : 0) +
-    (scope !== "all" ? 1 : 0) +
-    (difficulty !== "all" ? 1 : 0) +
-    (keyword.trim() ? 1 : 0);
+    selectedTags.length + (season !== "all" ? 1 : 0) + (mode !== "all" ? 1 : 0) + (keyword.trim() ? 1 : 0);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((current) =>
@@ -177,12 +132,8 @@ export function MapExplorer({
     setKeyword("");
     setSelectedTags([]);
     setSeason("all");
-    setTime("all");
-    setStyle("all");
-    setScope("all");
-    setDifficulty("all");
     setMode("all");
-    setSelectedSpotId(spots[0].id);
+    setSelectedId(mySpots[0]?.id);
   };
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -190,18 +141,9 @@ export function MapExplorer({
   };
 
   const aiPrompt = encodeURIComponent(
-    [
-      keyword ? `キーワード:${keyword}` : "",
-      selectedTags.length ? `タグ:${selectedTags.map(getTagLabel).join("、")}` : "",
-      season !== "all" ? `季節:${season}` : "",
-      time !== "all" ? `時間帯:${time}` : "",
-      style !== "all" ? `スタイル:${style}` : "",
-      scope !== "all" ? `範囲:${scope === "domestic" ? "国内" : "海外"}` : "",
-      difficulty !== "all" ? `難易度:${difficultyLabel(difficulty)}` : "",
-      mode !== "all" ? `表示:${modeOptions.find((item) => item.value === mode)?.label}` : ""
-    ]
-      .filter(Boolean)
-      .join(" / ")
+    filteredSpots.length
+      ? `My Atlasの候補で旅程を作る: ${filteredSpots.map((spot) => spot.name).join("、")}`
+      : "SNSで見つけた絶景候補から旅程を考えたい"
   );
 
   return (
@@ -214,22 +156,31 @@ export function MapExplorer({
           <div className="mb-7 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
               <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
-                ZEKKEI ATLAS
+                My Atlas Map
               </Badge>
               <h1 className="text-balance text-4xl font-semibold tracking-normal md:text-6xl">
-                Map Discovery
+                My Map Discovery
               </h1>
-              <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
-                季節、時間、旅のスタイルから、次の絶景を地図で探す。
+              <p className="mt-4 max-w-3xl text-base leading-8 text-slate-300">
+                SNSで見つけた行きたい絶景を、自分だけの地図で眺める。位置がある候補は地図へ、未整理の候補はカードで育てます。
               </p>
             </div>
-            <Link
-              href={`/ai-planner${aiPrompt ? `?prompt=${aiPrompt}` : ""}`}
-              className={buttonVariants({ variant: "primary", size: "lg", className: "w-fit" })}
-            >
-              <Sparkles className="h-5 w-5" />
-              AIにこの条件で相談する
-            </Link>
+            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+              <Button
+                size="lg"
+                onClick={() => {
+                  setEditingSpot(undefined);
+                  setModalOpen(true);
+                }}
+              >
+                <Plus className="h-5 w-5" />
+                SNS URLから追加
+              </Button>
+              <Link href={`/ai-planner?prompt=${aiPrompt}`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
+                <Sparkles className="h-5 w-5" />
+                AIにこのリストで相談
+              </Link>
+            </div>
           </div>
 
           <form
@@ -241,7 +192,7 @@ export function MapExplorer({
               <input
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
-                placeholder="海、星空、紅葉、車なし、週末旅..."
+                placeholder="保存した場所、SNS URL、メモ、タグから探す..."
                 className="h-12 w-full bg-transparent text-base text-white outline-none placeholder:text-slate-500"
               />
             </label>
@@ -275,47 +226,20 @@ export function MapExplorer({
           <div className="mb-5 flex flex-col gap-3 rounded-[24px] border border-white/[0.10] bg-white/[0.045] p-3 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
               <span className="shrink-0 px-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Season Layer
+                Season
               </span>
-              <FilterChip
-                label="すべて"
-                active={season === "all"}
-                onClick={() => setSeason("all")}
-                className="shrink-0"
-              />
+              <FilterChip label="すべて" active={season === "all"} onClick={() => setSeason("all")} className="shrink-0" />
               {seasonOptions.map((item) => (
-                <FilterChip
-                  key={item}
-                  label={item}
-                  active={season === item}
-                  onClick={() => setSeason(item)}
-                  className="shrink-0"
-                />
+                <FilterChip key={item} label={item} active={season === item} onClick={() => setSeason(item)} className="shrink-0" />
               ))}
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge>{season === "all" ? `${visibleSpots.length}件を表示中` : `${season}におすすめの絶景 ${visibleSpots.length}件`}</Badge>
+              <Badge>{filteredSpots.length}件を表示中</Badge>
+              <Badge>{locatedSpots.length}件が地図に表示</Badge>
               {selectedTags.map((tag) => (
-                <Badge key={tag}>#{getTagLabel(tag)}</Badge>
+                <Badge key={tag}>#{tag}</Badge>
               ))}
             </div>
-          </div>
-
-          <div className="mb-5 flex gap-2 overflow-x-auto pb-2 xl:hidden">
-            {popularMobileFilters().map((item) => (
-              <FilterChip
-                key={item}
-                label={item}
-                active={selectedTags.includes(normalizeTagFilter(item)) || season === item || style === item || time === item}
-                onClick={() => {
-                  if (seasonOptions.includes(item)) setSeason(season === item ? "all" : item);
-                  else if (timeOptions.includes(item)) setTime(time === item ? "all" : item);
-                  else if (travelStyleOptions.includes(item)) setStyle(style === item ? "all" : item);
-                  else toggleTag(normalizeTagFilter(item));
-                }}
-                className="shrink-0"
-              />
-            ))}
           </div>
 
           <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)_360px]">
@@ -323,69 +247,21 @@ export function MapExplorer({
               <div className="space-y-6 p-5">
                 <div className="flex items-center justify-between">
                   <h2 className="flex items-center gap-2 text-lg font-semibold">
-                    <SlidersHorizontal className="h-5 w-5 text-cyan-100" />
-                    Filters
+                    <Filter className="h-5 w-5 text-cyan-100" />
+                    My Filters
                   </h2>
                   <Badge>{activeFilterCount} active</Badge>
                 </div>
-
                 <FilterGroup title="絶景タイプ">
                   <div className="flex flex-wrap gap-2">
                     {scenicTypeFilters.map((tag) => (
-                      <FilterChip
-                        key={tag.value}
-                        label={tag.label}
-                        active={selectedTags.includes(tag.value)}
-                        onClick={() => toggleTag(tag.value)}
-                      />
+                      <FilterChip key={tag} label={tag} active={selectedTags.includes(tag)} onClick={() => toggleTag(tag)} />
                     ))}
                   </div>
                 </FilterGroup>
-
-                <FilterGroup title="季節レイヤー">
-                  <ChipRow value={season} options={seasonOptions} onChange={(value) => setSeason(value)} />
-                </FilterGroup>
-
-                <FilterGroup title="時間帯">
-                  <ChipRow value={time} options={timeOptions} onChange={(value) => setTime(value)} />
-                </FilterGroup>
-
-                <FilterGroup title="旅行スタイル">
-                  <ChipRow value={style} options={travelStyleOptions} onChange={(value) => setStyle(value)} />
-                </FilterGroup>
-
-                <FilterGroup title="国内 / 海外">
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      ["all", "すべて"],
-                      ["domestic", "国内"],
-                      ["overseas", "海外"]
-                    ].map(([value, label]) => (
-                      <FilterChip
-                        key={value}
-                        label={label}
-                        active={scope === value}
-                        onClick={() => setScope(value as ScopeFilter)}
-                      />
-                    ))}
-                  </div>
-                </FilterGroup>
-
-                <FilterGroup title="難易度">
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      ["all", "すべて"],
-                      ["easy", "気軽"],
-                      ["normal", "標準"],
-                      ["hard", "上級"]
-                    ].map(([value, label]) => (
-                      <FilterChip
-                        key={value}
-                        label={label}
-                        active={difficulty === value}
-                        onClick={() => setDifficulty(value as DifficultyFilter)}
-                      />
-                    ))}
+                <FilterGroup title="使い方">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-4 text-sm leading-7 text-slate-300">
+                    位置情報がある候補だけ地図に出ます。SNS URLだけの候補はカードに残し、あとで緯度経度や地域を足せます。
                   </div>
                 </FilterGroup>
               </div>
@@ -395,46 +271,72 @@ export function MapExplorer({
               <div className="flex flex-col gap-3 rounded-[28px] border border-white/[0.12] bg-white/[0.06] p-4 backdrop-blur-2xl md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="flex items-center gap-2 text-sm text-cyan-100">
-                    <Filter className="h-4 w-4" />
-                    {visibleSpots.length}件を表示中
-                    <span className="text-slate-500">/ フィルター一致 {filteredSpots.length}件</span>
+                    <MapPin className="h-4 w-4" />
+                    {isReady ? `${locatedSpots.length}件のMy Spotを地図に表示` : "My Atlasを読み込み中"}
+                    <span className="text-slate-500">/ 全候補 {filteredSpots.length}件</span>
                   </p>
                   <p className="mt-1 text-xs text-slate-400">
-                    地図はドラッグ・ズームできます。ピンをクリックすると詳細が切り替わります。
+                    ピンを押すと保存元やメモを確認できます。
                   </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge>{modeOptions.find((item) => item.value === mode)?.label}</Badge>
-                  {selectedTags.slice(0, 4).map((tag) => (
-                    <Badge key={tag}>#{getTagLabel(tag)}</Badge>
-                  ))}
-                  {season !== "all" ? <Badge>{season}</Badge> : null}
-                  {time !== "all" ? <Badge>{time}</Badge> : null}
-                  {style !== "all" ? <Badge>{style}</Badge> : null}
                 </div>
               </div>
 
-              <TravelMap
-                spots={visibleSpots}
-                selectedSpotId={selectedSpot?.id}
-                onSelect={(spot) => setSelectedSpotId(spot.id)}
-                onReset={resetFilters}
-                mode={mode}
-                season={season}
-                selectedTags={selectedTags}
-              />
+              {mySpots.length === 0 ? (
+                <EmptyMapState onAdd={() => setModalOpen(true)} />
+              ) : (
+                <TravelMap
+                  spots={mapSpots}
+                  selectedSpotId={selectedSpot?.id}
+                  onSelect={(spot) => setSelectedId(spot.id)}
+                  onReset={resetFilters}
+                  mode={mode}
+                  season={season}
+                  selectedTags={selectedTags}
+                />
+              )}
 
-              <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-                {visibleSpots.map((spot) => (
-                  <SpotCard
+              {unlocatedSpots.length > 0 ? (
+                <section>
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <h2 className="text-xl font-semibold">位置未設定の候補</h2>
+                    <Badge>{unlocatedSpots.length} spots</Badge>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
+                    {unlocatedSpots.map((spot) => (
+                  <MySpotCard
                     key={spot.id}
                     spot={spot}
                     compact
-                    selected={selectedSpotId === spot.id}
-                    onSelect={() => setSelectedSpotId(spot.id)}
+                    onSelect={() => setSelectedId(spot.id)}
+                    onEdit={openEditor}
+                    onRemove={removeMySpot}
                   />
-                ))}
-              </div>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
+              <section>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl font-semibold">My Atlas Board</h2>
+                    <p className="mt-1 text-sm text-slate-400">カードを押すと地図・右パネルと連動します。</p>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
+                  {filteredSpots.map((spot) => (
+                    <MySpotCard
+                      key={spot.id}
+                      spot={spot}
+                      compact
+                      selected={selectedId === spot.id}
+                      onSelect={() => setSelectedId(spot.id)}
+                      onEdit={openEditor}
+                      onRemove={removeMySpot}
+                    />
+                  ))}
+                </div>
+              </section>
             </div>
 
             <GlassPanel className="xl:sticky xl:top-28 xl:h-[calc(100vh-8rem)] xl:overflow-y-auto">
@@ -443,44 +345,11 @@ export function MapExplorer({
                   <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
                     選択中
                   </Badge>
-                  <div className="relative overflow-hidden rounded-[24px]">
-                    <img src={selectedSpot.image} alt={selectedSpot.name} className="h-64 w-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/86 via-slate-950/20 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <p className="flex items-center gap-1.5 text-xs text-cyan-100">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {selectedSpot.region} / {selectedSpot.country}
-                      </p>
-                      <h2 className="mt-2 text-3xl font-semibold">{selectedSpot.name}</h2>
-                    </div>
-                  </div>
-
-                  <p className="mt-5 leading-7 text-slate-300">{selectedSpot.description}</p>
-
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {selectedSpot.tags.map((tag) => (
-                      <Badge key={tag}>#{getTagLabel(tag)}</Badge>
-                    ))}
-                  </div>
-
-                  <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-                    <InfoCard label="Best Season" value={selectedSpot.bestSeason.join(" / ")} />
-                    <InfoCard label="Best Time" value={selectedSpot.bestTime.join(" / ")} icon={<Clock className="h-4 w-4" />} />
-                    <InfoCard label="Difficulty" value={difficultyLabel(selectedSpot.difficulty)} />
-                    <InfoCard label="Photo Score" value={`${selectedSpot.photoScore}/100`} icon={<Camera className="h-4 w-4" />} />
-                    <InfoCard label="Budget" value={budgetLabel(selectedSpot.budgetLevel)} icon={<Wallet className="h-4 w-4" />} />
-                    <InfoCard label="Duration" value={selectedSpot.duration} />
-                  </div>
-
-                  <div className="mt-6 grid gap-3">
-                    <WishlistButton spotId={selectedSpot.id} className="w-full" />
-                    <Link href={`/spots/${selectedSpot.id}`} className={buttonVariants({ variant: "primary", size: "md", className: "w-full" })}>
-                      詳細を見る
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
+                  <MySpotCard spot={selectedSpot} onEdit={openEditor} onRemove={removeMySpot} />
+                  <div className="mt-4 grid gap-3">
                     <Link
-                      href={`/ai-planner?prompt=${encodeURIComponent(`${selectedSpot.name}を中心に旅程を作る`)}`}
-                      className={buttonVariants({ variant: "outline", size: "md", className: "w-full" })}
+                      href={`/ai-planner?prompt=${encodeURIComponent(`${selectedSpot.name}を中心に旅程を作る。メモ:${selectedSpot.memo ?? ""}`)}`}
+                      className={buttonVariants({ variant: "primary", size: "md", className: "w-full" })}
                     >
                       <Sparkles className="h-4 w-4" />
                       AIに旅程を相談
@@ -490,32 +359,52 @@ export function MapExplorer({
               ) : (
                 <div className="p-8 text-center text-slate-400">
                   <Bot className="mx-auto mb-3 h-8 w-8 text-cyan-100" />
-                  条件に合うスポットがありません。
+                  SNSで見つけた場所を追加すると、ここに詳細が表示されます。
                 </div>
               )}
             </GlassPanel>
           </div>
         </div>
       </section>
+
+      <AddMySpotModal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setEditingSpot(undefined);
+        }}
+        editingSpot={editingSpot}
+      />
     </main>
   );
 }
 
-function popularMobileFilters() {
-  return [
-    "星空",
-    "海",
-    "夕日",
-    "離島",
-    "紅葉",
-    "雪",
-    "夏",
-    "冬",
-    "夜",
-    "カップル旅",
-    "ドライブ旅",
-    "海外旅行"
-  ];
+function EmptyMapState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <GlassPanel className="p-8 text-center md:p-12">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-cyan-200/25 bg-cyan-200/10 text-cyan-100">
+        <Plus className="h-7 w-7" />
+      </div>
+      <h2 className="mt-6 text-3xl font-semibold">まだMy Atlasに場所がありません。</h2>
+      <p className="mx-auto mt-4 max-w-2xl leading-8 text-slate-300">
+        SNSで見つけた投稿URLや場所名を追加すると、ここが自分だけの絶景マップになります。
+      </p>
+      <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+        <Button size="lg" onClick={onAdd}>
+          <Plus className="h-5 w-5" />
+          SNS URLから追加
+        </Button>
+        <Link href="/wishlist" className={buttonVariants({ variant: "secondary", size: "lg" })}>
+          My Atlasを開く
+        </Link>
+      </div>
+      <div className="mt-10 grid gap-4 md:grid-cols-4">
+        {starterSpots.map((spot) => (
+          <SpotCard key={spot.id} spot={spot} compact />
+        ))}
+      </div>
+    </GlassPanel>
+  );
 }
 
 function FilterGroup({ title, children }: { title: string; children: ReactNode }) {
@@ -526,36 +415,5 @@ function FilterGroup({ title, children }: { title: string; children: ReactNode }
       </h3>
       {children}
     </section>
-  );
-}
-
-function ChipRow({
-  value,
-  options,
-  onChange
-}: {
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      <FilterChip label="すべて" active={value === "all"} onClick={() => onChange("all")} />
-      {options.map((item) => (
-        <FilterChip key={item} label={item} active={value === item} onClick={() => onChange(item)} />
-      ))}
-    </div>
-  );
-}
-
-function InfoCard({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-4">
-      <p className="flex items-center gap-1.5 text-xs text-slate-400">
-        {icon}
-        {label}
-      </p>
-      <p className="mt-1 font-medium text-white">{value}</p>
-    </div>
   );
 }

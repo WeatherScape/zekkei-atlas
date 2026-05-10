@@ -4,19 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Compass, Heart, Map, Sparkles } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { useWishlist } from "@/hooks/use-wishlist";
+import { useMySpots } from "@/hooks/use-my-spots";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Home" },
   { href: "/map", label: "Map" },
   { href: "/ai-planner", label: "AI Planner" },
-  { href: "/wishlist", label: "Wishlist" }
+  { href: "/wishlist", label: "My Atlas" }
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { savedIds } = useWishlist();
+  const { savedIds } = useMySpots();
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 px-4 py-4 md:px-8">
@@ -65,7 +65,7 @@ export function SiteHeader() {
           <Link
             href="/wishlist"
             className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.12] bg-white/10 text-white transition hover:bg-white/20"
-            aria-label="保存リスト"
+            aria-label="My Atlas"
           >
             <Heart className="h-4 w-4" />
             {savedIds.length > 0 ? (

@@ -2,31 +2,63 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Heart, Loader2, Sparkles, Trash2 } from "lucide-react";
-import { spots, type Spot } from "@/data/spots";
+import { Compass, Loader2, MapPin, Plus, Sparkles } from "lucide-react";
+import { spots } from "@/data/spots";
+import { mySpotToMapSpot, type MySpot } from "@/data/my-spots";
+import { AddMySpotModal } from "@/components/add-my-spot-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { FilterChip } from "@/components/filter-chip";
 import { GlassPanel } from "@/components/ui/glass-panel";
+import { MySpotCard } from "@/components/my-spot-card";
 import { SpotCard } from "@/components/spot-card";
-import { useWishlist } from "@/hooks/use-wishlist";
+import { TravelMap } from "@/components/map/TravelMap";
+import { useMySpots } from "@/hooks/use-my-spots";
 
-type ViewMode = "all" | "tag" | "season";
+type ViewMode = "all" | "tag" | "season" | "status";
 
 const starterSpots = spots
-  .filter((spot) => ["hateruma", "uyuni", "miyako"].includes(spot.id))
+  .filter((spot) => ["hateruma", "uyuni", "miyako", "tsunoshima", "shirakawago", "banff"].includes(spot.id))
   .sort((a, b) => b.photoScore - a.photoScore);
 
-export function WishlistPage() {
-  const { isReady, savedSpots, removeSpot } = useWishlist();
-  const [viewMode, setViewMode] = useState<ViewMode>("all");
+const statusLabels: Record<MySpot["status"], string> = {
+  want: "行きたい",
+  planning: "計画中",
+  visited: "行った"
+};
 
-  const tagGroups = useMemo(() => groupByTag(savedSpots), [savedSpots]);
-  const seasonGroups = useMemo(() => groupBySeason(savedSpots), [savedSpots]);
+export function WishlistPage() {
+  const { isReady, mySpots, removeMySpot } = useMySpots();
+  const [viewMode, setViewMode] = useState<ViewMode>("all");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingSpot, setEditingSpot] = useState<MySpot | undefined>();
+  const [selectedId, setSelectedId] = useState<string | undefined>();
+  const openEditor = (spot: MySpot) => {
+    setEditingSpot(spot);
+    setModalOpen(true);
+  };
+
+  const spotsWithLocation = useMemo(
+    () => mySpots.filter((spot) => typeof spot.latitude === "number" && typeof spot.longitude === "number"),
+    [mySpots]
+  );
+  const spotsWithoutLocation = useMemo(
+    () => mySpots.filter((spot) => typeof spot.latitude !== "number" || typeof spot.longitude !== "number"),
+    [mySpots]
+  );
+  const mapSpots = useMemo(() => spotsWithLocation.map(mySpotToMapSpot), [spotsWithLocation]);
+  const selectedSpot = mySpots.find((spot) => spot.id === selectedId) ?? spotsWithLocation[0] ?? mySpots[0];
+  const grouped = useMemo(() => {
+    if (viewMode === "tag") return groupByTag(mySpots);
+    if (viewMode === "season") return groupBySeason(mySpots);
+    if (viewMode === "status") return groupByStatus(mySpots);
+    return [];
+  }, [mySpots, viewMode]);
+
   const aiPrompt = encodeURIComponent(
-    savedSpots.length
-      ? `保存リストから旅程を作る: ${savedSpots.map((spot) => spot.name).join("、")}`
-      : "保存リストから旅程を作る"
+    mySpots.length
+      ? `My Atlasの行きたい場所から旅程を作る: ${mySpots.map((spot) => spot.name).join("、")}`
+      : "SNSで見つけた絶景を整理して旅程にしたい"
   );
 
   return (
@@ -34,101 +66,191 @@ export function WishlistPage() {
       <section className="relative overflow-hidden px-5 pb-20 pt-32 md:px-8">
         <div className="absolute inset-0 bg-night-rim" />
         <div className="absolute inset-0 bg-atlas-grid bg-[length:72px_72px] opacity-30" />
+
         <div className="relative mx-auto max-w-7xl">
-          <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div className="mb-10 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
               <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
-                Wishlist
+                My ZEKKEI ATLAS
               </Badge>
               <h1 className="text-balance text-4xl font-semibold tracking-normal md:text-6xl">
-                保存した絶景を、次の旅の候補に。
+                SNSで見つけた「行きたい」を、自分だけの旅地図へ。
               </h1>
-              <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
-                気になった場所を残して、季節やタグで眺め直す。旅の輪郭が少しずつ見えてきます。
+              <p className="mt-4 max-w-3xl text-base leading-8 text-slate-300">
+                Instagram、TikTok、Google Maps、メモに散らばった絶景候補を集めて、季節・タグ・地図で眺め直す。旅の意思決定が楽しくなるMy Atlasです。
               </p>
             </div>
-            <Link href={`/ai-planner?prompt=${aiPrompt}`} className={buttonVariants({ variant: "primary", size: "lg" })}>
-              <Sparkles className="h-5 w-5" />
-              AIに保存リストから旅程を作ってもらう
-            </Link>
+            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+              <Button
+                size="lg"
+                onClick={() => {
+                  setEditingSpot(undefined);
+                  setModalOpen(true);
+                }}
+              >
+                <Plus className="h-5 w-5" />
+                SNS URLから追加
+              </Button>
+              <Link href={`/ai-planner?prompt=${aiPrompt}`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
+                <Sparkles className="h-5 w-5" />
+                このリストでAI相談
+              </Link>
+            </div>
           </div>
 
           <GlassPanel className="mb-8 p-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-slate-300">
-                {isReady ? `${savedSpots.length} spots saved` : "保存リストを読み込み中..."}
-              </p>
+              <div className="grid grid-cols-3 gap-3 text-sm md:min-w-[360px]">
+                <Metric label="My Spots" value={isReady ? `${mySpots.length}` : "..."} />
+                <Metric label="On Map" value={isReady ? `${spotsWithLocation.length}` : "..."} />
+                <Metric label="Need Location" value={isReady ? `${spotsWithoutLocation.length}` : "..."} />
+              </div>
               <div className="flex gap-2 overflow-x-auto pb-1">
-                <FilterChip label="一覧" active={viewMode === "all"} onClick={() => setViewMode("all")} />
+                <FilterChip label="ボード" active={viewMode === "all"} onClick={() => setViewMode("all")} />
                 <FilterChip label="タグ別" active={viewMode === "tag"} onClick={() => setViewMode("tag")} />
                 <FilterChip label="季節別" active={viewMode === "season"} onClick={() => setViewMode("season")} />
+                <FilterChip label="状態別" active={viewMode === "status"} onClick={() => setViewMode("status")} />
               </div>
             </div>
           </GlassPanel>
 
           {!isReady ? (
-            <LoadingWishlist />
-          ) : savedSpots.length === 0 ? (
-            <EmptyWishlist />
-          ) : viewMode === "all" ? (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {savedSpots.map((spot) => (
-                <SavedCard key={spot.id} spot={spot} onRemove={() => removeSpot(spot.id)} />
-              ))}
-            </div>
-          ) : viewMode === "tag" ? (
-            <GroupedWishlist groups={tagGroups} onRemove={removeSpot} />
+            <LoadingAtlas />
+          ) : mySpots.length === 0 ? (
+            <EmptyAtlas
+              onAdd={() => {
+                setEditingSpot(undefined);
+                setModalOpen(true);
+              }}
+            />
           ) : (
-            <GroupedWishlist groups={seasonGroups} onRemove={removeSpot} />
+            <div className="space-y-10">
+              <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+                <TravelMap
+                  spots={mapSpots}
+                  selectedSpotId={selectedSpot?.id}
+                  onSelect={(spot) => setSelectedId(spot.id)}
+                  onReset={() => setSelectedId(spotsWithLocation[0]?.id)}
+                  className="min-h-[420px] md:min-h-[560px]"
+                />
+                <GlassPanel className="p-5">
+                  {selectedSpot ? (
+                    <div>
+                      <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
+                        今見ている候補
+                      </Badge>
+                      <MySpotCard spot={selectedSpot} onEdit={openEditor} onRemove={removeMySpot} />
+                    </div>
+                  ) : (
+                    <div className="flex min-h-[420px] flex-col items-center justify-center text-center text-slate-300">
+                      <Compass className="mb-4 h-9 w-9 text-cyan-100" />
+                      位置付きの候補を追加すると、ここに表示されます。
+                    </div>
+                  )}
+                </GlassPanel>
+              </section>
+
+              {viewMode === "all" ? (
+                <AtlasBoard
+                  spots={mySpots}
+                  selectedId={selectedSpot?.id}
+                  onSelect={setSelectedId}
+                  onEdit={openEditor}
+                  onRemove={removeMySpot}
+                />
+              ) : (
+                <GroupedAtlas groups={grouped} onSelect={setSelectedId} onEdit={openEditor} onRemove={removeMySpot} />
+              )}
+
+              {spotsWithoutLocation.length > 0 ? (
+                <section>
+                  <div className="mb-5 flex items-center gap-3">
+                    <MapPin className="h-5 w-5 text-amber-100" />
+                    <h2 className="text-2xl font-semibold">位置を追加すると地図に表示されます</h2>
+                    <Badge>{spotsWithoutLocation.length} spots</Badge>
+                  </div>
+                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    {spotsWithoutLocation.map((spot) => (
+                      <MySpotCard
+                        key={`no-location-${spot.id}`}
+                        spot={spot}
+                        compact
+                        onEdit={openEditor}
+                        onRemove={removeMySpot}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+            </div>
           )}
         </div>
       </section>
+
+      <AddMySpotModal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setEditingSpot(undefined);
+        }}
+        editingSpot={editingSpot}
+      />
     </main>
   );
 }
 
-function LoadingWishlist() {
+function LoadingAtlas() {
   return (
     <GlassPanel className="p-10 text-center">
       <Loader2 className="mx-auto h-8 w-8 animate-spin text-cyan-100" />
-      <p className="mt-4 text-slate-300">保存リストを読み込んでいます。</p>
+      <p className="mt-4 text-slate-300">My Atlasを読み込んでいます。</p>
     </GlassPanel>
   );
 }
 
-function EmptyWishlist() {
+function EmptyAtlas({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="space-y-8">
-      <GlassPanel className="mx-auto max-w-3xl p-10 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-cyan-200/25 bg-cyan-200/10 text-cyan-100">
-          <Heart className="h-7 w-7" />
-        </div>
-        <h2 className="mt-6 text-3xl font-semibold">まだ保存した絶景はありません。</h2>
-        <p className="mt-4 text-slate-300">
-          まずは人気の絶景から保存して、次の旅の候補を育てていきましょう。
-        </p>
-        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/map" className={buttonVariants({ variant: "primary", size: "lg" })}>
-            地図から探す
-          </Link>
-          <Link href="/ai-planner" className={buttonVariants({ variant: "secondary", size: "lg" })}>
-            AIに相談
-          </Link>
+    <div className="space-y-10">
+      <GlassPanel className="mx-auto max-w-4xl overflow-hidden p-0">
+        <div className="grid gap-0 md:grid-cols-[0.9fr_1.1fr]">
+          <div className="relative min-h-[320px]">
+            <img
+              src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=90"
+              alt="旅の候補を集めるイメージ"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/28 to-transparent" />
+          </div>
+          <div className="p-7 md:p-10">
+            <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
+              Start your Atlas
+            </Badge>
+            <h2 className="text-3xl font-semibold">まずはSNSで見つけた場所を1つ追加。</h2>
+            <p className="mt-4 leading-8 text-slate-300">
+              投稿URL、場所名、メモを貼るだけ。ZEKKEI ATLASがタグや季節を整理して、自分だけの絶景ボードに変えます。
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Button size="lg" onClick={onAdd}>
+                <Plus className="h-5 w-5" />
+                SNS URLから追加
+              </Button>
+              <Link href="/map" className={buttonVariants({ variant: "secondary", size: "lg" })}>
+                地図を見る
+              </Link>
+            </div>
+          </div>
         </div>
       </GlassPanel>
 
       <section>
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="text-2xl font-semibold">まずは人気の絶景から保存してみる</h2>
-            <p className="mt-2 text-sm text-slate-400">保存ボタンを押すと、このページに即反映されます。</p>
+            <h2 className="text-2xl font-semibold">スターター候補を追加して試す</h2>
+            <p className="mt-2 text-sm text-slate-400">保存ボタンを押すと、My Atlasに取り込まれます。</p>
           </div>
-          <Link href="/map" className={buttonVariants({ variant: "outline", size: "sm" })}>
-            もっと見る
-          </Link>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
-          {starterSpots.map((spot) => (
+          {starterSpots.slice(0, 3).map((spot) => (
             <SpotCard key={spot.id} spot={spot} compact />
           ))}
         </div>
@@ -137,28 +259,52 @@ function EmptyWishlist() {
   );
 }
 
-function SavedCard({ spot, onRemove }: { spot: Spot; onRemove: () => void }) {
+function AtlasBoard({
+  spots,
+  selectedId,
+  onSelect,
+  onEdit,
+  onRemove
+}: {
+  spots: MySpot[];
+  selectedId?: string;
+  onSelect: (id: string) => void;
+  onEdit: (spot: MySpot) => void;
+  onRemove: (id: string) => void;
+}) {
   return (
-    <div className="relative">
-      <SpotCard spot={spot} />
-      <Button
-        variant="danger"
-        size="sm"
-        className="absolute bottom-5 left-5 z-10"
-        onClick={onRemove}
-      >
-        <Trash2 className="h-4 w-4" />
-        削除
-      </Button>
-    </div>
+    <section>
+      <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold">My Scenic Board</h2>
+          <p className="mt-2 text-sm text-slate-400">保存した絶景を、写真・タグ・季節で眺め直すボードです。</p>
+        </div>
+      </div>
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {spots.map((spot) => (
+          <MySpotCard
+            key={spot.id}
+            spot={spot}
+            selected={selectedId === spot.id}
+            onSelect={() => onSelect(spot.id)}
+            onEdit={onEdit}
+            onRemove={onRemove}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
-function GroupedWishlist({
+function GroupedAtlas({
   groups,
+  onSelect,
+  onEdit,
   onRemove
 }: {
-  groups: Array<{ label: string; spots: Spot[] }>;
+  groups: Array<{ label: string; spots: MySpot[] }>;
+  onSelect: (id: string) => void;
+  onEdit: (spot: MySpot) => void;
   onRemove: (id: string) => void;
 }) {
   return (
@@ -171,7 +317,14 @@ function GroupedWishlist({
           </div>
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {group.spots.map((spot) => (
-              <SavedCard key={`${group.label}-${spot.id}`} spot={spot} onRemove={() => onRemove(spot.id)} />
+              <MySpotCard
+                key={`${group.label}-${spot.id}`}
+                spot={spot}
+                compact
+                onSelect={() => onSelect(spot.id)}
+                onEdit={onEdit}
+                onRemove={onRemove}
+              />
             ))}
           </div>
         </section>
@@ -180,10 +333,19 @@ function GroupedWishlist({
   );
 }
 
-function groupByTag(items: Spot[]) {
-  const groups = new Map<string, Spot[]>();
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-3">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-white">{value}</p>
+    </div>
+  );
+}
+
+function groupByTag(items: MySpot[]) {
+  const groups = new Map<string, MySpot[]>();
   items.forEach((spot) => {
-    spot.tags.slice(0, 4).forEach((tag) => {
+    (spot.tags.length ? spot.tags : ["あとで整理"]).slice(0, 5).forEach((tag) => {
       groups.set(tag, [...(groups.get(tag) ?? []), spot]);
     });
   });
@@ -192,14 +354,18 @@ function groupByTag(items: Spot[]) {
     .sort((a, b) => b.spots.length - a.spots.length || a.label.localeCompare(b.label, "ja"));
 }
 
-function groupBySeason(items: Spot[]) {
-  const groups = new Map<string, Spot[]>();
+function groupBySeason(items: MySpot[]) {
+  const groups = new Map<string, MySpot[]>();
   items.forEach((spot) => {
-    spot.bestSeason.forEach((season) => {
+    (spot.bestSeason.length ? spot.bestSeason : ["未設定"]).forEach((season) => {
       groups.set(season, [...(groups.get(season) ?? []), spot]);
     });
   });
-  return ["春", "夏", "秋", "冬"]
-    .map((label) => ({ label, spots: groups.get(label) ?? [] }))
+  return Array.from(groups.entries()).map(([label, groupedSpots]) => ({ label, spots: groupedSpots }));
+}
+
+function groupByStatus(items: MySpot[]) {
+  return (["want", "planning", "visited"] as const)
+    .map((status) => ({ label: statusLabels[status], spots: items.filter((spot) => spot.status === status) }))
     .filter((group) => group.spots.length > 0);
 }
