@@ -1,7 +1,18 @@
 export type Difficulty = "easy" | "normal" | "hard";
 export type BudgetLevel = "low" | "medium" | "high";
 
-export type Spot = {
+export type SpotVisualProfile = {
+  catchCopy: string;
+  heroImage: string;
+  thumbnailImage: string;
+  mapPreviewImage: string;
+  themes: string[];
+  colorMood: string;
+  visualKeywords: string[];
+  avoidKeywords: string[];
+};
+
+type BaseSpot = {
   id: string;
   name: string;
   country: string;
@@ -22,7 +33,9 @@ export type Spot = {
   tips: string[];
 };
 
-export const spots: Spot[] = [
+export type Spot = BaseSpot & SpotVisualProfile;
+
+const baseSpots: BaseSpot[] = [
   {
     id: "ishigaki",
     name: "石垣島",
@@ -361,7 +374,7 @@ export const spots: Spot[] = [
     description:
       "雨季には空と大地の境界が消える、世界屈指の一生に一度の絶景。星空と朝焼けのリフレクションが圧倒的。",
     image:
-      "https://images.unsplash.com/photo-1667759316727-dc5ff7ad2437?auto=format&fit=crop&w=1600&q=85",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Reflection%20Salar%20de%20Uyuni.jpg?width=1600",
     latitude: -20.1338,
     longitude: -67.4891,
     tags: ["海外旅行", "星空", "朝日", "一生に一度", "写真映え"],
@@ -508,6 +521,198 @@ export const spots: Spot[] = [
     tips: ["人気湖は早朝到着が安心", "野生動物との距離を保つ"]
   }
 ];
+
+const spotVisualProfiles: Record<string, Omit<SpotVisualProfile, "heroImage" | "thumbnailImage" | "mapPreviewImage">> = {
+  ishigaki: {
+    catchCopy: "離島めぐりの起点になる、海と星空の南国ベース。",
+    themes: ["海", "島", "星空"],
+    colorMood: "emerald / deep blue / sunset gold",
+    visualKeywords: ["川平湾", "透明な海", "サンゴ礁", "星空", "沖縄"],
+    avoidKeywords: ["雪山", "ヨーロッパの街並み", "砂漠", "森林だけの風景"]
+  },
+  hateruma: {
+    catchCopy: "日本で南十字星にいちばん近づける島。",
+    themes: ["海", "島", "星空", "一生に一度"],
+    colorMood: "emerald / cobalt blue / starry navy",
+    visualKeywords: ["ニシ浜", "透明な海", "離島", "南国", "日本最南端", "星空"],
+    avoidKeywords: ["山岳風景", "雪景色", "ヨーロッパの街並み", "都市夜景"]
+  },
+  miyako: {
+    catchCopy: "透明すぎる海に、日常ごと溶けていく島。",
+    themes: ["海", "島", "リゾート", "ドライブ"],
+    colorMood: "turquoise / white sand / clean sky",
+    visualKeywords: ["宮古ブルー", "白砂", "ビーチ", "橋", "南国"],
+    avoidKeywords: ["雪山", "都市風景", "星空だけの写真", "森林だけの風景"]
+  },
+  taketomi: {
+    catchCopy: "赤瓦の集落と白砂の道に、沖縄の時間が残る島。",
+    themes: ["島", "集落", "海", "写真旅"],
+    colorMood: "coral red / white sand / soft blue",
+    visualKeywords: ["赤瓦", "竹富島", "白砂の道", "沖縄集落", "コンドイ浜"],
+    avoidKeywords: ["高層ビル", "雪景色", "ヨーロッパの街並み", "砂漠"]
+  },
+  kouri: {
+    catchCopy: "橋を渡る数分で、旅の気分が海色に変わる。",
+    themes: ["海", "ドライブ", "橋"],
+    colorMood: "turquoise / bridge white / summer blue",
+    visualKeywords: ["古宇利大橋", "沖縄本島", "海のグラデーション", "ドライブ"],
+    avoidKeywords: ["山岳湖", "雪", "都市夜景", "砂丘"]
+  },
+  tsunoshima: {
+    catchCopy: "コバルトブルーへ一直線に伸びる、記憶に残る橋。",
+    themes: ["海", "ドライブ", "橋"],
+    colorMood: "cobalt blue / white bridge / summer light",
+    visualKeywords: ["角島大橋", "山口県", "海へ伸びる橋", "ドライブ"],
+    avoidKeywords: ["沖縄の離島", "雪山", "森林", "ヨーロッパの街並み"]
+  },
+  shimanami: {
+    catchCopy: "橋と島影を巡る、移動そのものが旅になる道。",
+    themes: ["海", "島", "ドライブ", "サイクリング"],
+    colorMood: "setouchi blue / warm sunset / bridge gray",
+    visualKeywords: ["瀬戸内", "しまなみ海道", "橋", "島々", "サイクリング"],
+    avoidKeywords: ["熱帯ビーチだけ", "雪景色", "砂漠", "オーロラ"]
+  },
+  okunoshima: {
+    catchCopy: "瀬戸内の静けさと夕暮れが、小さな島を旅にする。",
+    themes: ["島", "瀬戸内", "夕日"],
+    colorMood: "quiet blue / faded concrete / sunset amber",
+    visualKeywords: ["大久野島", "瀬戸内海", "桟橋", "小さな島", "夕暮れ"],
+    avoidKeywords: ["南国リゾート", "雪山", "海外都市", "砂漠"]
+  },
+  "tottori-dunes": {
+    catchCopy: "砂の稜線と日本海がつくる、国内の非日常。",
+    themes: ["砂丘", "夕日", "星空"],
+    colorMood: "sand beige / navy sea / dusk orange",
+    visualKeywords: ["鳥取砂丘", "砂丘", "風紋", "日本海", "夕日"],
+    avoidKeywords: ["熱帯ビーチ", "森林", "雪村", "ヨーロッパの街並み"]
+  },
+  aso: {
+    catchCopy: "草原と火山のスケールに、九州の大地を感じる。",
+    themes: ["山", "草原", "ドライブ", "雲海"],
+    colorMood: "grass green / volcanic black / morning mist",
+    visualKeywords: ["阿蘇", "草千里", "火山", "外輪山", "雲海"],
+    avoidKeywords: ["海岸", "雪景色", "海外都市", "白砂ビーチ"]
+  },
+  kamikochi: {
+    catchCopy: "梓川と北アルプスが、歩く時間まで澄ませてくれる。",
+    themes: ["山", "川", "新緑", "紅葉"],
+    colorMood: "alpine green / clear river / stone gray",
+    visualKeywords: ["上高地", "河童橋", "梓川", "北アルプス", "大正池"],
+    avoidKeywords: ["海", "砂漠", "南国", "都市夜景"]
+  },
+  shirakawago: {
+    catchCopy: "雪と合掌造りが、物語の中の村を現実にする。",
+    themes: ["世界遺産", "雪", "歴史的建造物"],
+    colorMood: "snow white / warm window light / deep brown",
+    visualKeywords: ["白川郷", "合掌造り", "雪景色", "世界遺産", "集落"],
+    avoidKeywords: ["熱帯ビーチ", "砂漠", "高層ビル", "海岸"]
+  },
+  biei: {
+    catchCopy: "丘と青い池が、北海道の余白を静かに見せる。",
+    themes: ["北海道", "丘", "青い池", "雪"],
+    colorMood: "aoiike blue / snow white / field green",
+    visualKeywords: ["美瑛", "青い池", "丘陵", "北海道", "雪原"],
+    avoidKeywords: ["沖縄の海", "砂漠", "海外都市", "南国"]
+  },
+  "fuji-five-lakes": {
+    catchCopy: "湖面に映る富士山が、朝の旅を特別にする。",
+    themes: ["富士山", "湖", "朝日", "星空"],
+    colorMood: "fuji blue / lake reflection / dawn pink",
+    visualKeywords: ["富士五湖", "富士山", "河口湖", "逆さ富士", "朝焼け"],
+    avoidKeywords: ["南国ビーチ", "海外都市", "砂丘", "オーロラ"]
+  },
+  yakushima: {
+    catchCopy: "苔むす森で、自然に深く入り込む島旅。",
+    themes: ["森", "島", "滝", "一生に一度"],
+    colorMood: "moss green / rain forest / deep shadow",
+    visualKeywords: ["屋久島", "苔むす森", "白谷雲水峡", "縄文杉", "滝"],
+    avoidKeywords: ["白砂ビーチだけ", "雪山", "都市風景", "砂漠"]
+  },
+  uyuni: {
+    catchCopy: "空と地面の境界が消える、人生で一度は見たい鏡の世界。",
+    themes: ["海外", "一生に一度", "鏡張り", "非日常"],
+    colorMood: "salt white / sky blue / pale violet",
+    visualKeywords: ["ウユニ塩湖", "Salar de Uyuni", "鏡張り", "塩湖", "空の反射", "ボリビア"],
+    avoidKeywords: ["海岸", "森林", "日本の湖", "普通の砂漠", "南国ビーチ"]
+  },
+  iceland: {
+    catchCopy: "地球じゃないみたいな景色を走る旅。",
+    themes: ["海外", "大自然", "ドライブ", "滝", "オーロラ"],
+    colorMood: "cold blue / moss green / black lava / ice white",
+    visualKeywords: ["アイスランド", "滝", "火山地形", "氷河", "黒砂海岸", "オーロラ"],
+    avoidKeywords: ["tropical beach", "Japanese shrine", "Mediterranean town", "南国リゾート"]
+  },
+  santorini: {
+    catchCopy: "白い街と青い海が、夕暮れに映画みたいに染まる島。",
+    themes: ["海外", "島", "街歩き", "夕日"],
+    colorMood: "white wall / aegean blue / sunset gold",
+    visualKeywords: ["サントリーニ島", "白い街並み", "青いドーム", "エーゲ海", "夕日"],
+    avoidKeywords: ["雪山", "熱帯ジャングル", "日本の集落", "砂漠"]
+  },
+  cappadocia: {
+    catchCopy: "奇岩の空に、気球が浮かぶ朝を見に行く。",
+    themes: ["海外", "気球", "奇岩", "一生に一度"],
+    colorMood: "rose beige / dawn gold / balloon colors",
+    visualKeywords: ["カッパドキア", "気球", "奇岩", "朝焼け", "トルコ"],
+    avoidKeywords: ["海岸", "雪山", "日本庭園", "都市夜景"]
+  },
+  "grand-canyon": {
+    catchCopy: "地層の深さに、時間のスケールを思い出す。",
+    themes: ["海外", "渓谷", "夕日", "一生に一度"],
+    colorMood: "red rock / desert orange / deep shadow",
+    visualKeywords: ["グランドキャニオン", "渓谷", "赤い岩", "アメリカ", "夕日"],
+    avoidKeywords: ["海", "森林だけ", "雪村", "ヨーロッパの街並み"]
+  },
+  lapland: {
+    catchCopy: "雪原の夜空に、オーロラが静かに揺れる。",
+    themes: ["海外", "雪", "オーロラ", "一生に一度"],
+    colorMood: "aurora green / snow white / polar night",
+    visualKeywords: ["ラップランド", "オーロラ", "雪原", "フィンランド", "冬"],
+    avoidKeywords: ["南国ビーチ", "砂漠", "地中海", "都市昼景"]
+  },
+  banff: {
+    catchCopy: "エメラルドの湖とロッキー山脈を巡る、北米の大自然。",
+    themes: ["海外", "湖", "山", "ドライブ"],
+    colorMood: "emerald lake / alpine blue / rock gray",
+    visualKeywords: ["バンフ", "モレーン湖", "ロッキー山脈", "カナダ", "湖"],
+    avoidKeywords: ["熱帯ビーチ", "砂漠", "日本の街並み", "地中海"]
+  }
+};
+
+function attachVisualProfile(spot: BaseSpot): Spot {
+  const profile = spotVisualProfiles[spot.id];
+  if (!profile) {
+    return {
+      ...spot,
+      catchCopy: spot.highlights[0] || spot.description,
+      heroImage: spot.image,
+      thumbnailImage: spot.image,
+      mapPreviewImage: spot.image,
+      themes: spot.tags.slice(0, 3),
+      colorMood: "deep navy / soft blue",
+      visualKeywords: [spot.name, spot.region, ...spot.tags],
+      avoidKeywords: ["unrelated stock image", "generic landscape"]
+    };
+  }
+
+  return {
+    ...spot,
+    ...profile,
+    heroImage: spot.image,
+    thumbnailImage: spot.image,
+    mapPreviewImage: spot.image
+  };
+}
+
+export const spots: Spot[] = baseSpots.map(attachVisualProfile);
+
+export const spotVisualIntegrity = spots.map((spot) => ({
+  id: spot.id,
+  name: spot.name,
+  image: spot.image,
+  visualKeywords: spot.visualKeywords,
+  avoidKeywords: spot.avoidKeywords
+}));
 
 export const popularTags = [
   "星空",

@@ -31,8 +31,11 @@ import { WishlistButton } from "@/components/wishlist-button";
 import { budgetLabel, difficultyLabel } from "@/lib/utils";
 
 const featured = spots
-  .filter((spot) => ["hateruma", "uyuni", "cappadocia", "kamikochi", "miyako", "banff"].includes(spot.id))
+  .filter((spot) => ["hateruma", "uyuni", "iceland", "miyako", "cappadocia", "banff"].includes(spot.id))
   .sort((a, b) => b.photoScore - a.photoScore);
+
+const getShowcaseSpot = (id: string) => spots.find((spot) => spot.id === id) ?? spots[0];
+const heroShowcaseSpots = [getShowcaseSpot("hateruma"), getShowcaseSpot("uyuni"), getShowcaseSpot("miyako")];
 
 const tripStyleCards = [
   { label: "カップル旅", icon: Heart, tone: "from-rose-300/20 to-cyan-200/10" },
@@ -99,14 +102,14 @@ export function HomePage() {
     <main className="overflow-hidden bg-atlas-ink text-white">
       <section className="relative min-h-[100svh] overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=2200&q=90"
-          alt="星空と山岳湖の絶景"
+          src={heroShowcaseSpots[0].heroImage}
+          alt={`${heroShowcaseSpots[0].name}の景色`}
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="hero-vignette absolute inset-0" />
         <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-atlas-ink to-transparent" />
 
-        <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-5 pb-10 pt-32 md:px-8 md:pb-14">
+        <div className="relative z-10 mx-auto grid min-h-[100svh] max-w-7xl gap-10 px-5 pb-10 pt-32 md:px-8 md:pb-14 lg:grid-cols-[0.92fr_0.78fr] lg:items-end">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -123,54 +126,55 @@ export function HomePage() {
               SNSで見つけた景色、ふと思い出した旅先、人生で見たい場所を、自分だけの地図に残そう。
             </p>
             <p className="mt-4 max-w-3xl text-sm leading-8 text-slate-300 md:text-base">
-              ZEKKEI ATLASは、行きたい場所を保存し、理由ややりたいことまで整理して、“本当に行く”ための旅マップを作れるアプリです。
+              ZEKKEI ATLASは、行きたい場所を残し、理由ややりたいことまで整理して、“本当に行く”ための旅マップを作れるアプリです。
             </p>
-          </motion.div>
+            <motion.form
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18, duration: 0.65 }}
+              onSubmit={handleSearch}
+              className="glass-highlight mt-8 flex max-w-4xl flex-col gap-3 rounded-[28px] border border-white/[0.14] bg-slate-950/[0.42] p-3 shadow-glass backdrop-blur-2xl md:flex-row md:items-center"
+            >
+              <label className="flex min-h-14 flex-1 items-center gap-3 rounded-2xl bg-white/[0.06] px-4">
+                <Search className="h-5 w-5 text-cyan-100" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="InstagramやXで見つけた場所名・URLを貼り付け"
+                  className="h-12 w-full bg-transparent text-base text-white outline-none placeholder:text-slate-400"
+                />
+              </label>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link href="/map" className={buttonVariants({ variant: "primary", size: "lg", className: "w-full sm:w-auto" })}>
+                  <Map className="h-5 w-5" />
+                  自分の旅地図を作る
+                </Link>
+                <Button type="submit" variant="secondary" size="lg" className="w-full sm:w-auto">
+                  <Sparkles className="h-5 w-5" />
+                  最初の景色を残す
+                </Button>
+              </div>
+            </motion.form>
 
-          <motion.form
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.18, duration: 0.65 }}
-            onSubmit={handleSearch}
-            className="glass-highlight mt-8 flex max-w-4xl flex-col gap-3 rounded-[28px] border border-white/[0.14] bg-slate-950/[0.42] p-3 shadow-glass backdrop-blur-2xl md:flex-row md:items-center"
-          >
-            <label className="flex min-h-14 flex-1 items-center gap-3 rounded-2xl bg-white/[0.06] px-4">
-              <Search className="h-5 w-5 text-cyan-100" />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="InstagramやXで見つけた場所名・URLを貼り付け"
-                className="h-12 w-full bg-transparent text-base text-white outline-none placeholder:text-slate-400"
-              />
-            </label>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link href="/map" className={buttonVariants({ variant: "primary", size: "lg", className: "w-full sm:w-auto" })}>
-                <Map className="h-5 w-5" />
-                自分の旅地図を作る
-              </Link>
-              <Button type="submit" variant="secondary" size="lg" className="w-full sm:w-auto">
-                <Sparkles className="h-5 w-5" />
-                最初の景色を残す
-              </Button>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.34, duration: 0.8 }}
+              className="mt-8 flex gap-3 overflow-x-auto pb-2"
+            >
+              {popularTags.map((tag) => (
+                <Link
+                  key={tag}
+                  href={`/map?tag=${encodeURIComponent(tag)}`}
+                  className="shrink-0 rounded-full border border-white/[0.14] bg-white/10 px-4 py-2 text-sm text-slate-100 backdrop-blur-xl transition hover:border-cyan-200/50 hover:bg-cyan-200/[0.12]"
+                >
+                  #{tag}
+                </Link>
+              ))}
             </div>
-          </motion.form>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.34, duration: 0.8 }}
-            className="mt-8 flex gap-3 overflow-x-auto pb-2"
-          >
-            {popularTags.map((tag) => (
-              <Link
-                key={tag}
-                href={`/map?tag=${encodeURIComponent(tag)}`}
-                className="shrink-0 rounded-full border border-white/[0.14] bg-white/10 px-4 py-2 text-sm text-slate-100 backdrop-blur-xl transition hover:border-cyan-200/50 hover:bg-cyan-200/[0.12]"
-              >
-                #{tag}
-              </Link>
-            ))}
           </motion.div>
+
+          <HeroAtlasMock />
         </div>
       </section>
 
@@ -179,7 +183,7 @@ export function HomePage() {
           <SectionHeading
             eyebrow="How It Grows"
             title="行きたい気持ちが、地図に育っていく。"
-            description="保存で終わらせず、理由、やりたいこと、次の一歩まで残す。ZEKKEI ATLASは、憧れを予定に近づけるプライベート旅マップです。"
+            description="残して終わらせず、理由、やりたいこと、次の一歩まで足していく。ZEKKEI ATLASは、憧れを予定に近づけるプライベート旅マップです。"
           />
           <div className="rounded-[30px] border border-amber-200/20 bg-amber-200/[0.07] p-5 text-sm leading-7 text-amber-50 shadow-glass">
             Google Mapsの代替ではありません。公開SNSでもありません。自分だけが見返せる、人生で見たい景色のためのトラベルノートです。
@@ -210,7 +214,7 @@ export function HomePage() {
         <SectionHeading
           eyebrow="AI as a Companion"
           title="行きたい気持ちを、旅の第一歩へ。"
-          description="保存した場所や、行きたい理由、季節、同行者の気分をもとに、AIが次の旅の第一歩を整理します。"
+          description="残した場所や、行きたい理由、季節、同行者の気分をもとに、AIが次の旅の第一歩を整理します。"
         />
         <GlassPanel className="p-5 md:p-7">
           <div className="space-y-5">
@@ -219,7 +223,7 @@ export function HomePage() {
                 <MessageCircle className="h-5 w-5 text-cyan-100" />
               </div>
               <div className="rounded-3xl rounded-tl-sm bg-white/10 px-5 py-4 text-sm leading-7 text-slate-100">
-                My Atlasに保存した沖縄の海と星空スポットを、2泊3日の候補に整理して
+                My Atlasに残した沖縄の海と星空スポットを、2泊3日の候補に整理して
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -283,7 +287,7 @@ export function HomePage() {
         </div>
         <GlassPanel className="self-end p-6">
           <img
-            src={selectedMapSpot.image}
+            src={selectedMapSpot.mapPreviewImage}
             alt={selectedMapSpot.name}
             className="h-64 w-full rounded-[22px] object-cover"
           />
@@ -297,7 +301,7 @@ export function HomePage() {
             <p className="mt-2 text-sm text-cyan-100">
               {selectedMapSpot.region} / {selectedMapSpot.country}
             </p>
-            <p className="mt-4 leading-7 text-slate-300">{selectedMapSpot.description}</p>
+            <p className="mt-4 leading-7 text-slate-300">{selectedMapSpot.catchCopy}</p>
             <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
               <Info label="Season" value={selectedMapSpot.bestSeason.join(" / ")} />
               <Info label="Time" value={selectedMapSpot.bestTime.join(" / ")} />
@@ -382,7 +386,7 @@ export function HomePage() {
               行きたい場所を、忘れないだけで終わらせない。
             </h2>
             <p className="mt-5 text-lg leading-8 text-slate-200">
-              保存した景色に、理由と次の一歩を足していく。いつか行きたい場所を、本当に行く予定に変えていきましょう。
+              残した景色に、理由と次の一歩を足していく。いつか行きたい場所を、本当に行く予定に変えていきましょう。
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/map" className={buttonVariants({ variant: "primary", size: "lg" })}>
@@ -405,6 +409,80 @@ export function HomePage() {
         initialSourceUrl={query.startsWith("http") ? query : ""}
       />
     </main>
+  );
+}
+
+function HeroAtlasMock() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 28, scale: 0.98 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      transition={{ delay: 0.28, duration: 0.75 }}
+      className="relative hidden lg:block"
+    >
+      <div className="absolute -inset-8 rounded-[48px] bg-cyan-200/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-[36px] border border-white/[0.16] bg-slate-950/72 p-4 shadow-glass backdrop-blur-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.24em] text-cyan-100/70">Private Travel Map</p>
+            <h2 className="mt-1 text-2xl font-semibold text-white">My Atlas</h2>
+          </div>
+          <Badge className="border-amber-200/35 bg-amber-200/15 text-amber-50">今年行きたい 3</Badge>
+        </div>
+
+        <div className="relative h-[360px] overflow-hidden rounded-[28px] border border-white/[0.12] bg-[radial-gradient(circle_at_20%_20%,rgba(103,232,249,0.16),transparent_28%),linear-gradient(135deg,#061827,#020617_70%)]">
+          <div className="absolute inset-0 bg-atlas-grid bg-[length:54px_54px] opacity-20" />
+          <div className="absolute left-[13%] top-[24%] h-28 w-44 rounded-[50%] border border-cyan-200/16 bg-cyan-200/[0.04]" />
+          <div className="absolute bottom-[14%] right-[12%] h-32 w-52 rounded-[50%] border border-amber-100/14 bg-amber-100/[0.035]" />
+          {[
+            { spot: heroShowcaseSpots[0], x: "62%", y: "42%", label: "恋人と行きたい", tone: "cyan" },
+            { spot: heroShowcaseSpots[1], x: "23%", y: "56%", label: "一生に一度", tone: "amber" },
+            { spot: heroShowcaseSpots[2], x: "72%", y: "64%", label: "今年行きたい", tone: "blue" }
+          ].map((item) => (
+            <div
+              key={item.spot.id}
+              className="absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: item.x, top: item.y }}
+            >
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-cyan-200 text-slate-950 shadow-glow">
+                <Map className="h-5 w-5" />
+                <span className="absolute -inset-3 rounded-full border border-cyan-200/35" />
+              </div>
+              <div className="mt-2 whitespace-nowrap rounded-full border border-white/10 bg-slate-950/80 px-3 py-1 text-xs font-semibold text-white shadow-glass backdrop-blur">
+                {item.spot.name}
+              </div>
+            </div>
+          ))}
+
+          <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-3">
+            {heroShowcaseSpots.map((spot) => (
+              <article key={spot.id} className="overflow-hidden rounded-2xl border border-white/[0.14] bg-slate-950/72 shadow-glass backdrop-blur-xl">
+                <img src={spot.thumbnailImage} alt={spot.name} className="h-20 w-full object-cover" />
+                <div className="p-3">
+                  <p className="truncate text-sm font-semibold text-white">{spot.name}</p>
+                  <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-300">{spot.catchCopy}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-3">
+            <p className="text-slate-400">My Spots</p>
+            <p className="mt-1 text-2xl font-semibold text-white">12</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-3">
+            <p className="text-slate-400">Next Step</p>
+            <p className="mt-1 font-semibold text-cyan-100">航空券を調べる</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-3">
+            <p className="text-slate-400">Mood</p>
+            <p className="mt-1 font-semibold text-amber-100">一生に一度</p>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 

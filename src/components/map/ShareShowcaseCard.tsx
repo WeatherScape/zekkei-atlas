@@ -12,7 +12,7 @@ export function ShareShowcaseCard({ spot }: { spot: Spot }) {
     <aside className="pointer-events-auto absolute bottom-4 left-4 right-4 z-30 overflow-hidden rounded-[26px] border border-white/[0.16] bg-slate-950/[0.74] shadow-glass backdrop-blur-2xl lg:left-6 lg:right-auto lg:w-[360px]">
       <div className="grid grid-cols-[118px_1fr] gap-0">
         <div className="relative min-h-[160px] overflow-hidden">
-          <img src={spot.image} alt={spot.name} className="h-full w-full object-cover" />
+          <img src={spot.mapPreviewImage} alt={spot.name} className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent" />
         </div>
         <div className="p-4">

@@ -89,6 +89,28 @@ function buildClusterIcon(L: LeafletModule, count: number) {
   });
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function buildPopupHtml(spot: Spot) {
+  return `
+    <article class="zekkei-map-popup-card">
+      <img src="${escapeHtml(spot.mapPreviewImage)}" alt="${escapeHtml(spot.name)}" />
+      <div>
+        <p>${escapeHtml([spot.region, spot.country].filter(Boolean).join(" / "))}</p>
+        <h3>${escapeHtml(spot.name)}</h3>
+        <span>${escapeHtml(spot.catchCopy)}</span>
+      </div>
+    </article>
+  `;
+}
+
 function shouldCluster(map: LeafletMap, count: number) {
   const zoom = map.getZoom();
   if (count <= 1) return false;
@@ -301,8 +323,16 @@ export function LeafletTravelMap({
           offset: [0, selected ? -22 : -16],
           opacity: 0.96
         });
+        marker.bindPopup(buildPopupHtml(spot), {
+          className: "zekkei-map-popup",
+          closeButton: false,
+          maxWidth: 260,
+          minWidth: 220,
+          offset: [0, -18]
+        });
         marker.on("click", () => {
           current.onSelect(spot);
+          marker.openPopup();
           map.flyTo([spot.latitude, spot.longitude], Math.max(map.getZoom(), 7), {
             animate: true,
             duration: 0.55
@@ -364,7 +394,7 @@ export function LeafletTravelMap({
           <div className="absolute bottom-3 left-3 right-3 z-[430] rounded-2xl border border-cyan-200/25 bg-slate-950/90 p-3 shadow-glass backdrop-blur-xl md:bottom-4 md:left-1/2 md:right-auto md:w-[360px] md:-translate-x-1/2">
             <p className="text-sm font-semibold text-white">地図を動かして、行きたい場所を中央に合わせる</p>
             <p className="mt-1 text-xs leading-6 text-slate-300">
-              スマホでもズレにくいように、タップ位置ではなく地図の中心を保存します。
+              スマホでもズレにくいように、タップ位置ではなく地図の中心を記録します。
             </p>
             <Button
               type="button"

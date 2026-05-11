@@ -40,7 +40,7 @@ function firstResearch(spot: MySpot) {
   if (spot.tags.includes("星空")) items.add("月齢・天気・光害の少ない場所を確認する");
   if (spot.tags.includes("海") || spot.tags.includes("島")) items.add("現地での移動手段と船/飛行機の本数を確認する");
   if (spot.companion) items.add(`${spot.companion}と行けそうな時期を相談する`);
-  items.add("保存したSNS投稿を見返して、撮りたい構図を決める");
+  items.add("残したSNS投稿を見返して、撮りたい構図を決める");
   return Array.from(items).slice(0, 5);
 }
 

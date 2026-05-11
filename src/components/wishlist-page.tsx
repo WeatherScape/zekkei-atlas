@@ -279,7 +279,7 @@ function EmptyAtlas({ onAdd }: { onAdd: () => void }) {
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="text-2xl font-semibold">スターター候補を追加して試す</h2>
-            <p className="mt-2 text-sm text-slate-400">保存ボタンを押すと、My Atlasに取り込まれます。</p>
+            <p className="mt-2 text-sm text-slate-400">気になる景色を選ぶと、My Atlasに取り込まれます。</p>
           </div>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
@@ -310,7 +310,7 @@ function AtlasBoard({
       <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-2xl font-semibold">My Scenic Board</h2>
-          <p className="mt-2 text-sm text-slate-400">保存した絶景を、写真・タグ・季節で眺め直すボードです。</p>
+          <p className="mt-2 text-sm text-slate-400">残した絶景を、写真・タグ・季節で眺め直すボードです。</p>
         </div>
       </div>
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

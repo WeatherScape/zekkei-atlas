@@ -36,13 +36,13 @@ export function SpotCard({
     >
       <div className={cn("relative overflow-hidden", compact ? "h-44" : "h-64")}>
         <img
-          src={spot.image}
+          src={spot.thumbnailImage}
           alt={spot.name}
           className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
         <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-          {spot.tags.slice(0, compact ? 2 : 3).map((tag) => (
+          {spot.themes.slice(0, compact ? 2 : 3).map((tag) => (
             <Badge key={tag} className="bg-slate-950/40">
               {tag}
             </Badge>
@@ -64,7 +64,7 @@ export function SpotCard({
 
       <div className="space-y-4 p-5">
         {!compact ? (
-          <p className="line-clamp-2 text-sm leading-7 text-slate-300">{spot.description}</p>
+          <p className="line-clamp-2 text-sm leading-7 text-slate-300">{spot.catchCopy}</p>
         ) : null}
 
         <div className="grid grid-cols-2 gap-3 text-sm">

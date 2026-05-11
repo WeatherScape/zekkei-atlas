@@ -669,7 +669,7 @@ function SampleSpotCard({ spot, catchCopy, onImport }: { spot: Spot; catchCopy: 
   return (
     <article className="overflow-hidden rounded-2xl border border-white/[0.12] bg-slate-950/58 text-left">
       <div className="relative h-24 md:h-28">
-        <img src={spot.image} alt={spot.name} className="h-full w-full object-cover" />
+        <img src={spot.thumbnailImage} alt={spot.name} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
         <Badge className="absolute left-3 top-3 border-white/15 bg-slate-950/55 text-white">サンプル</Badge>
       </div>

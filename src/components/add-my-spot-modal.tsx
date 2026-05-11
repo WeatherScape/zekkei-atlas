@@ -340,7 +340,7 @@ export function AddMySpotModal({
               <textarea
                 value={memo}
                 onChange={(event) => setMemo(event.target.value)}
-                placeholder="投稿の雰囲気、保存したきっかけ、あとで見返したい情報..."
+                placeholder="投稿の雰囲気、残したきっかけ、あとで見返したい情報..."
                 rows={3}
                 className="w-full resize-none rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
               />
@@ -407,7 +407,7 @@ export function AddMySpotModal({
                     className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
                   />
                   {image.startsWith("data:") ? (
-                    <p className="text-xs leading-5 text-cyan-100">選んだ画像をこのスポットに保存します。</p>
+                    <p className="text-xs leading-5 text-cyan-100">選んだ画像をこのスポットに使います。</p>
                   ) : null}
                   {imageError ? <p className="text-xs leading-5 text-rose-200">{imageError}</p> : null}
                 </div>
@@ -473,7 +473,7 @@ export function AddMySpotModal({
                 <input
                   value={firstStepMemo}
                   onChange={(event) => setFirstStepMemo(event.target.value)}
-                  placeholder="航空券を調べる、ベストシーズンを調べる、ホテル候補を保存する..."
+                  placeholder="航空券を調べる、ベストシーズンを調べる、ホテル候補を控える..."
                   className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
                 />
               </Field>
@@ -537,7 +537,7 @@ export function AddMySpotModal({
           <div className="sticky bottom-0 z-20 -mx-5 mt-6 border-t border-white/10 bg-slate-950/92 p-4 backdrop-blur-xl md:hidden">
             <Button type="submit" size="lg" className="w-full" disabled={!name.trim() && !sourceUrl.trim()}>
               {saved ? <Check className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
-              {saved ? "この景色を、あなたの地図に残しました" : editingSpot ? "変更を保存" : "My Atlasに残す"}
+              {saved ? "この景色を、あなたの地図に残しました" : editingSpot ? "変更を反映" : "My Atlasに残す"}
             </Button>
           </div>
         </div>
@@ -585,7 +585,7 @@ export function AddMySpotModal({
                   label="地図"
                   value={typeof preview.latitude === "number" && typeof preview.longitude === "number" ? "表示できます" : "位置未設定"}
                 />
-                <PreviewMetric label="保存元" value={preview.sourceType || "other"} />
+                <PreviewMetric label="出典" value={preview.sourceType || "other"} />
               </div>
               {preview.memo ? (
                 <p className="rounded-2xl border border-white/10 bg-white/[0.05] p-4 text-sm leading-7 text-slate-300">
@@ -615,7 +615,7 @@ export function AddMySpotModal({
 
           <Button type="submit" size="lg" className="sticky bottom-3 z-10 mt-5 hidden w-full md:inline-flex" disabled={!name.trim() && !sourceUrl.trim()}>
             {saved ? <Check className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
-            {saved ? "この景色を、あなたの地図に残しました" : editingSpot ? "変更を保存" : "My Atlasに残す"}
+            {saved ? "この景色を、あなたの地図に残しました" : editingSpot ? "変更を反映" : "My Atlasに残す"}
           </Button>
           <p className="mt-3 text-xs leading-6 text-slate-400">
             本物のSNS連携や投稿解析は使わず、入力内容とローカルデータで整理しています。

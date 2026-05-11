@@ -257,7 +257,7 @@ export function officialSpotToMySpot(spot: Spot): MySpot {
     name: spot.name,
     sourceType: "other",
     memo: spot.description,
-    image: spot.image,
+    image: spot.thumbnailImage,
     country: spot.country,
     region: spot.region,
     latitude: spot.latitude,
@@ -283,16 +283,29 @@ export function officialSpotToMySpot(spot: Spot): MySpot {
 }
 
 export function mySpotToMapSpot(spot: MySpot): Spot {
+  const image =
+    spot.image || "https://commons.wikimedia.org/wiki/Special:FilePath/Hateruma%20nishihama%201.jpg?width=1600";
+  const tags = Array.from(new Set([...spot.tags, ...spot.themes.map((theme) => mySpotThemeLabels[theme])]));
+  const catchCopy = spot.catchCopy || spot.reason || "いつか行きたいを、本当に行く日に変える景色。";
+
   return {
     id: spot.id,
     name: spot.name,
     country: spot.country || "未設定",
     region: spot.region || "位置未設定",
     description: spot.reason || spot.memo || spot.catchCopy || "SNSで見つけた、いつか行きたい景色。",
-    image: spot.image || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=85",
+    image,
+    catchCopy,
+    heroImage: image,
+    thumbnailImage: image,
+    mapPreviewImage: image,
     latitude: spot.latitude ?? 0,
     longitude: spot.longitude ?? 0,
-    tags: Array.from(new Set([...spot.tags, ...spot.themes.map((theme) => mySpotThemeLabels[theme])])),
+    tags,
+    themes: spot.themes.map((theme) => mySpotThemeLabels[theme]),
+    colorMood: spot.themes.includes("sea") ? "turquoise / deep navy" : "deep navy / soft cyan",
+    visualKeywords: [spot.name, spot.region, spot.country, ...tags].filter(Boolean) as string[],
+    avoidKeywords: ["unrelated stock image", "generic mismatch"],
     bestSeason: spot.bestSeason,
     bestTime: spot.bestTime?.length ? spot.bestTime : ["あとで整理"],
     travelStyle: [
@@ -305,7 +318,7 @@ export function mySpotToMapSpot(spot: MySpot): Spot {
     photoScore: Math.min(99, Math.max(70, (spot.wishLevel ?? 4) * 18 + (spot.image ? 8 : 0))),
     budgetLevel: "medium",
     duration: "あとで計画",
-    highlights: [spot.catchCopy || "いつか行きたい景色", ...(spot.activities.slice(0, 2))],
+    highlights: [catchCopy, ...(spot.activities.slice(0, 2))],
     tips: [spot.nextStep || spot.firstStepMemo || "場所・季節・予算を少しずつ整理する。"]
   };
 }

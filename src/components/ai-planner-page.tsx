@@ -67,7 +67,7 @@ export function AiPlannerPage({ initialPrompt = "" }: { initialPrompt?: string }
                 旅の第一歩を作る
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
-                保存した景色、行きたい理由、旅の気分から「本当に行くならまず何をするか」をAPIなしのローカルAI風に整理します。
+                残した景色、行きたい理由、旅の気分から「本当に行くならまず何をするか」をAPIなしのローカルAI風に整理します。
               </p>
             </div>
             <Link href="/map" className={buttonVariants({ variant: "secondary", size: "lg" })}>
@@ -139,7 +139,7 @@ export function AiPlannerPage({ initialPrompt = "" }: { initialPrompt?: string }
                   <div className="grid gap-4 md:grid-cols-3">
                     {spots.slice(0, 3).map((spot) => (
                       <div key={spot.id} className="rounded-3xl border border-white/10 bg-white/[0.06] p-4">
-                        <img src={spot.image} alt={spot.name} className="h-36 w-full rounded-2xl object-cover" />
+                        <img src={spot.thumbnailImage} alt={spot.name} className="h-36 w-full rounded-2xl object-cover" />
                         <h3 className="mt-4 font-semibold">{spot.name}</h3>
                         <p className="mt-1 text-sm text-slate-400">{spot.region}</p>
                       </div>
@@ -188,7 +188,7 @@ function PlannerResultView({ result, input }: { result: TravelPlan; input: Trave
     <div className="space-y-6">
       <GlassPanel className="overflow-hidden">
         <div className="relative min-h-[420px] p-7">
-          <img src={top.image} alt={top.name} className="absolute inset-0 h-full w-full object-cover" />
+            <img src={top.heroImage} alt={top.name} className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-slate-950/25" />
           <div className="relative z-10 max-w-2xl">
             <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
@@ -214,7 +214,7 @@ function PlannerResultView({ result, input }: { result: TravelPlan; input: Trave
       <div className="grid gap-5 md:grid-cols-3">
         {result.recommendations.map((spot, index) => (
           <GlassPanel key={spot.id} className="overflow-hidden">
-            <img src={spot.image} alt={spot.name} className="h-48 w-full object-cover" />
+            <img src={spot.thumbnailImage} alt={spot.name} className="h-48 w-full object-cover" />
             <div className="p-5">
               <Badge>#{index + 1}</Badge>
               <h3 className="mt-3 text-2xl font-semibold">{spot.name}</h3>
