@@ -78,6 +78,13 @@ const sampleSpots = sampleSpotIds
   .map((id) => spots.find((spot) => spot.id === id))
   .filter((spot): spot is Spot => Boolean(spot));
 
+const sampleCatchCopy: Record<string, string> = {
+  hateruma: "日本で南十字星にいちばん近づける島。",
+  uyuni: "空と地面の境界が消える、人生で一度は見たい鏡の世界。",
+  iceland: "地球じゃないみたいな景色を走る旅。",
+  miyako: "透明すぎる海に、日常ごと溶けていく島。"
+};
+
 function spotMatchesMode(spot: MySpot, mode: MapViewMode) {
   if (mode === "all") return true;
   const text = normalizeText([spot.name, spot.region, spot.country, ...spot.tags].join(" "));
@@ -583,7 +590,7 @@ function RightEmptyPanel({ onAdd }: { onAdd: () => void }) {
       </p>
       <Button className="mt-6" onClick={onAdd}>
         <Plus className="h-4 w-4" />
-        最初の場所を追加する
+        最初の景色を追加する
       </Button>
     </div>
   );
@@ -603,7 +610,7 @@ function EmptyMapOverlay({ onAdd, onImport }: { onAdd: () => void; onImport: (sp
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <Button size="lg" onClick={onAdd}>
             <Plus className="h-5 w-5" />
-            最初の場所を追加する
+            最初の景色を追加する
           </Button>
           <Link href="/wishlist" className={buttonVariants({ variant: "secondary", size: "lg" })}>
             My Atlasを見る
@@ -615,14 +622,19 @@ function EmptyMapOverlay({ onAdd, onImport }: { onAdd: () => void; onImport: (sp
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/70">Sample</p>
               <h3 className="mt-1 text-xl font-semibold text-white">おすすめから始める</h3>
               <p className="mt-1 text-sm text-slate-300">
-                追加すると、薄いデモピンがあなたのMy Atlasピンに変わります。
+                ここに、あなたの人生で見たい景色が増えていきます。最初の景色を追加すると、地図にピンが灯ります。
               </p>
             </div>
             <Badge className="w-fit border-cyan-200/30 bg-cyan-200/10 text-cyan-50">地図上のピンはサンプル</Badge>
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {sampleSpots.map((spot) => (
-              <SampleSpotCard key={spot.id} spot={spot} onImport={() => onImport(spot.id)} />
+              <SampleSpotCard
+                key={spot.id}
+                spot={spot}
+                catchCopy={sampleCatchCopy[spot.id] ?? "いつか見たい景色をMy Atlasに残す。"}
+                onImport={() => onImport(spot.id)}
+              />
             ))}
           </div>
         </div>
@@ -631,7 +643,7 @@ function EmptyMapOverlay({ onAdd, onImport }: { onAdd: () => void; onImport: (sp
   );
 }
 
-function SampleSpotCard({ spot, onImport }: { spot: Spot; onImport: () => void }) {
+function SampleSpotCard({ spot, catchCopy, onImport }: { spot: Spot; catchCopy: string; onImport: () => void }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-white/[0.12] bg-slate-950/58 text-left">
       <div className="relative h-24 md:h-28">
@@ -644,6 +656,7 @@ function SampleSpotCard({ spot, onImport }: { spot: Spot; onImport: () => void }
           <h4 className="font-semibold text-white">{spot.name}</h4>
           <p className="mt-1 text-xs text-cyan-100">{spot.region} / {spot.country}</p>
         </div>
+        <p className="min-h-[44px] text-xs leading-5 text-slate-300">{catchCopy}</p>
         <div className="flex flex-wrap gap-1.5">
           {spot.tags.slice(0, 2).map((tag) => (
             <span key={tag} className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-slate-200">
