@@ -34,8 +34,13 @@ const featured = spots
   .filter((spot) => ["hateruma", "uyuni", "iceland", "miyako", "cappadocia", "banff"].includes(spot.id))
   .sort((a, b) => b.photoScore - a.photoScore);
 
-const getShowcaseSpot = (id: string) => spots.find((spot) => spot.id === id) ?? spots[0];
-const heroShowcaseSpots = [getShowcaseSpot("hateruma"), getShowcaseSpot("uyuni"), getShowcaseSpot("miyako")];
+const fallbackShowcaseSpot = spots.find((spot) => spot.id === "hateruma") ?? spots[0];
+const getShowcaseSpot = (id: string) => spots.find((spot) => spot.id === id) ?? fallbackShowcaseSpot;
+const heroShowcaseSpots = [
+  getShowcaseSpot("hateruma"),
+  getShowcaseSpot("uyuni"),
+  getShowcaseSpot("miyako")
+] as const;
 
 const tripStyleCards = [
   { label: "カップル旅", icon: Heart, tone: "from-rose-300/20 to-cyan-200/10" },

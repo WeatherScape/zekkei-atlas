@@ -522,7 +522,7 @@ const baseSpots: BaseSpot[] = [
   }
 ];
 
-const spotVisualProfiles: Record<string, Omit<SpotVisualProfile, "heroImage" | "thumbnailImage" | "mapPreviewImage">> = {
+const spotVisualProfiles: Partial<Record<string, Omit<SpotVisualProfile, "heroImage" | "thumbnailImage" | "mapPreviewImage">>> = {
   ishigaki: {
     catchCopy: "離島めぐりの起点になる、海と星空の南国ベース。",
     themes: ["海", "島", "星空"],
