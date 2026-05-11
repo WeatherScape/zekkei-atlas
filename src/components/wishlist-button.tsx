@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 
 export function WishlistButton({
   spotId,
-  label = "My Atlasに追加",
-  savedLabel = "追加済み",
+  label = "この景色を残す",
+  savedLabel = "My Atlasに追加済み",
   className,
   variant = "secondary",
   size = "md"

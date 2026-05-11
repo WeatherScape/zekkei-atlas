@@ -150,7 +150,7 @@ export function HomePage() {
               </Link>
               <Button type="submit" variant="secondary" size="lg" className="w-full sm:w-auto">
                 <Sparkles className="h-5 w-5" />
-                行きたい場所を追加する
+                最初の景色を残す
               </Button>
             </div>
           </motion.form>
@@ -209,8 +209,8 @@ export function HomePage() {
       <section className="mx-auto grid max-w-7xl gap-8 px-5 py-24 md:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <SectionHeading
           eyebrow="AI as a Companion"
-          title="AIは、行きたい場所を“行ける計画”に近づける相棒。"
-          description="AIが勝手に旅先を決めるのではなく、あなたが保存した場所と理由をもとに、最初に調べることや短い旅程を整理します。"
+          title="行きたい気持ちを、旅の第一歩へ。"
+          description="保存した場所や、行きたい理由、季節、同行者の気分をもとに、AIが次の旅の第一歩を整理します。"
         />
         <GlassPanel className="p-5 md:p-7">
           <div className="space-y-5">
@@ -269,7 +269,7 @@ export function HomePage() {
           <SectionHeading
             eyebrow="Map Preview"
             title="行きたい場所が、地図に増えていく。"
-            description="SNSで見つけた景色も、いつか行きたい島も、人生で見たい絶景も、すべて自分だけの地図に残せます。"
+            description="SNSで見つけた場所も、ふと思い出した旅先も、My Atlasに残せば、自分だけの旅地図として育っていきます。"
           />
           <div className="mt-8">
             <TravelMap
