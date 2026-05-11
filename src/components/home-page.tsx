@@ -2,7 +2,6 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -53,8 +52,30 @@ const seasonalCopy: Record<string, string> = {
   冬: "雪景色、温泉、オーロラ。静けさと透明感が旅を深くする季節。"
 };
 
+const atlasSteps = [
+  {
+    title: "SNSで見つけた場所を残す",
+    description: "InstagramやX、Google Mapsで気になった場所名やURLを、そのままMy Atlasへ。",
+    icon: Search
+  },
+  {
+    title: "行きたい理由をメモする",
+    description: "なぜ惹かれたのか、そこで何をしたいのかまで残すから、後で見返しても熱量が消えません。",
+    icon: Heart
+  },
+  {
+    title: "自分だけの地図にピンが増える",
+    description: "絶景、ホテル、カフェ、海外スポット。行きたい場所が地図上に育っていきます。",
+    icon: Map
+  },
+  {
+    title: "いつかを予定に変える",
+    description: "AI風の第一歩提案で、季節、予算、次に調べることを整理できます。",
+    icon: Sparkles
+  }
+];
+
 export function HomePage() {
-  const router = useRouter();
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState("夏");
@@ -71,11 +92,7 @@ export function HomePage() {
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (query.trim()) {
-      setModalOpen(true);
-      return;
-    }
-    router.push("/wishlist");
+    setModalOpen(true);
   };
 
   return (
@@ -97,13 +114,16 @@ export function HomePage() {
             className="max-w-5xl"
           >
             <Badge className="mb-6 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
-              Personal Scenic Atlas
+              ZEKKEI ATLAS / Private Travel Map
             </Badge>
             <h1 className="text-balance text-6xl font-semibold tracking-normal text-white md:text-8xl lg:text-9xl">
-              ZEKKEI ATLAS
+              いつか行きたいを、後悔にしない。
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-9 text-slate-200 md:text-2xl">
               SNSで見つけた景色、ふと思い出した旅先、人生で見たい場所を、自分だけの地図に残そう。
+            </p>
+            <p className="mt-4 max-w-3xl text-sm leading-8 text-slate-300 md:text-base">
+              ZEKKEI ATLASは、行きたい場所を保存し、理由ややりたいことまで整理して、“本当に行く”ための旅マップを作れるアプリです。
             </p>
           </motion.div>
 
@@ -124,14 +144,14 @@ export function HomePage() {
               />
             </label>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button type="submit" variant="primary" size="lg" className="w-full sm:w-auto">
-                <Sparkles className="h-5 w-5" />
-                この景色を地図に残す
-              </Button>
-              <Link href="/wishlist" className={buttonVariants({ variant: "secondary", size: "lg", className: "w-full sm:w-auto" })}>
+              <Link href="/map" className={buttonVariants({ variant: "primary", size: "lg", className: "w-full sm:w-auto" })}>
                 <Map className="h-5 w-5" />
-                My Atlasを開く
+                自分の旅地図を作る
               </Link>
+              <Button type="submit" variant="secondary" size="lg" className="w-full sm:w-auto">
+                <Sparkles className="h-5 w-5" />
+                行きたい場所を追加する
+              </Button>
             </div>
           </motion.form>
 
@@ -144,7 +164,7 @@ export function HomePage() {
             {popularTags.map((tag) => (
               <Link
                 key={tag}
-                href={`/wishlist`}
+                href={`/map?tag=${encodeURIComponent(tag)}`}
                 className="shrink-0 rounded-full border border-white/[0.14] bg-white/10 px-4 py-2 text-sm text-slate-100 backdrop-blur-xl transition hover:border-cyan-200/50 hover:bg-cyan-200/[0.12]"
               >
                 #{tag}
@@ -154,11 +174,43 @@ export function HomePage() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-7xl px-5 py-20 md:px-8">
+        <div className="mb-10 grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+          <SectionHeading
+            eyebrow="How It Grows"
+            title="行きたい気持ちが、地図に育っていく。"
+            description="保存で終わらせず、理由、やりたいこと、次の一歩まで残す。ZEKKEI ATLASは、憧れを予定に近づけるプライベート旅マップです。"
+          />
+          <div className="rounded-[30px] border border-amber-200/20 bg-amber-200/[0.07] p-5 text-sm leading-7 text-amber-50 shadow-glass">
+            Google Mapsの代替ではありません。公開SNSでもありません。自分だけが見返せる、人生で見たい景色のためのトラベルノートです。
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {atlasSteps.map((step, index) => {
+            const Icon = step.icon;
+            return (
+              <GlassPanel key={step.title} className="p-5">
+                <div className="mb-8 flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-200/25 bg-cyan-200/[0.11] text-cyan-100">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Step {index + 1}
+                  </span>
+                </div>
+                <h3 className="text-xl font-semibold text-white">{step.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-300">{step.description}</p>
+              </GlassPanel>
+            );
+          })}
+        </div>
+      </section>
+
       <section className="mx-auto grid max-w-7xl gap-8 px-5 py-24 md:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <SectionHeading
-          eyebrow="AI Travel Concierge"
-          title="旅の言葉を、そのまま絶景候補へ。"
-          description="SNSで見つけた場所、メモ、季節、同行者の気分をまとめて、旅程に変えるコンシェルジュ体験です。"
+          eyebrow="AI as a Companion"
+          title="AIは、行きたい場所を“行ける計画”に近づける相棒。"
+          description="AIが勝手に旅先を決めるのではなく、あなたが保存した場所と理由をもとに、最初に調べることや短い旅程を整理します。"
         />
         <GlassPanel className="p-5 md:p-7">
           <div className="space-y-5">
@@ -167,7 +219,7 @@ export function HomePage() {
                 <MessageCircle className="h-5 w-5 text-cyan-100" />
               </div>
               <div className="rounded-3xl rounded-tl-sm bg-white/10 px-5 py-4 text-sm leading-7 text-slate-100">
-                Instagramで保存した沖縄の海と星空スポットを、2泊3日の候補に整理して
+                My Atlasに保存した沖縄の海と星空スポットを、2泊3日の候補に整理して
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -175,7 +227,7 @@ export function HomePage() {
                 <Bot className="h-5 w-5 text-cyan-100" />
               </div>
               <div className="rounded-3xl rounded-tl-sm border border-cyan-200/20 bg-cyan-200/10 px-5 py-4 text-sm leading-7 text-cyan-50">
-                My Atlasにある石垣島・波照間島・宮古島を夏の海旅としてまとめられます。星空は波照間島、移動のしやすさは石垣島、ドライブ感は宮古島が主役です。
+                この場所を本当に行くなら、まずはここから。波照間島は新月前後、石垣島は移動の拠点、宮古島はドライブの日として組み立てられます。
               </div>
             </div>
             <div className="flex flex-wrap gap-2 pt-2">
@@ -196,9 +248,9 @@ export function HomePage() {
       <section className="mx-auto max-w-7xl px-5 py-12 md:px-8">
         <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <SectionHeading
-            eyebrow="Featured Destinations"
-            title="保存したくなる、今のおすすめ。"
-            description="最初のMy Atlasに追加しやすいスターター候補です。気になる場所は保存して、自分のボードに取り込めます。"
+            eyebrow="Starter Spots"
+            title="まずは、行きたい景色を1つ残してみる。"
+            description="気になる絶景をMy Atlasに追加すると、あなた専用の旅地図にピンが増えていきます。"
           />
           <Link href="/map" className={buttonVariants({ variant: "outline", size: "md" })}>
             すべて見る
@@ -216,8 +268,8 @@ export function HomePage() {
         <div>
           <SectionHeading
             eyebrow="Map Preview"
-            title="集めた候補を、地図で眺め直す。"
-            description="SNSで見つけた場所を保存すると、位置があるものはMy Mapに並びます。"
+            title="行きたい場所が、地図に増えていく。"
+            description="SNSで見つけた景色も、いつか行きたい島も、人生で見たい絶景も、すべて自分だけの地図に残せます。"
           />
           <div className="mt-8">
             <TravelMap
@@ -253,7 +305,7 @@ export function HomePage() {
               <Info label="Budget" value={budgetLabel(selectedMapSpot.budgetLevel)} />
             </div>
             <div className="mt-6 flex gap-3">
-              <WishlistButton spotId={selectedMapSpot.id} className="flex-1" />
+              <WishlistButton spotId={selectedMapSpot.id} label="この景色を残す" savedLabel="My Atlasに追加済み" className="flex-1" />
               <Link href={`/spots/${selectedMapSpot.id}`} className={buttonVariants({ variant: "primary", size: "md", className: "flex-1" })}>
                 詳細を見る
               </Link>
@@ -327,14 +379,14 @@ export function HomePage() {
               Next Journey
             </Badge>
             <h2 className="text-balance text-4xl font-semibold tracking-normal text-white md:text-6xl">
-              次の旅先を、自分の保存から見つけよう。
+              行きたい場所を、忘れないだけで終わらせない。
             </h2>
             <p className="mt-5 text-lg leading-8 text-slate-200">
-              SNSで見つけた候補をMy Atlasに集めて、季節、距離感、同行者の気分まで重ねながら選べます。
+              保存した景色に、理由と次の一歩を足していく。いつか行きたい場所を、本当に行く予定に変えていきましょう。
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/wishlist" className={buttonVariants({ variant: "primary", size: "lg" })}>
-                My Atlasを開く
+              <Link href="/map" className={buttonVariants({ variant: "primary", size: "lg" })}>
+                自分の旅地図を作る
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <Link href="/ai-planner" className={buttonVariants({ variant: "secondary", size: "lg" })}>
