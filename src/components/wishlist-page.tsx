@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Compass, Loader2, MapPin, Plus, Sparkles } from "lucide-react";
 import { spots } from "@/data/spots";
-import { mySpotStatusLabels, mySpotToMapSpot, type MySpot } from "@/data/my-spots";
+import { mySpotStatusLabels, mySpotThemeLabels, mySpotToMapSpot, type MySpot } from "@/data/my-spots";
 import { AddMySpotModal } from "@/components/add-my-spot-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { SpotCard } from "@/components/spot-card";
 import { TravelMap } from "@/components/map/TravelMap";
 import { useMySpots } from "@/hooks/use-my-spots";
 
-type ViewMode = "all" | "tag" | "season" | "status";
+type ViewMode = "all" | "theme" | "tag" | "season" | "status";
 
 const starterSpots = spots
   .filter((spot) => ["hateruma", "uyuni", "miyako", "tsunoshima", "shirakawago", "banff"].includes(spot.id))
@@ -48,6 +48,7 @@ export function WishlistPage() {
   const mapSpots = useMemo(() => spotsWithLocation.map(mySpotToMapSpot), [spotsWithLocation]);
   const selectedSpot = mySpots.find((spot) => spot.id === selectedId) ?? spotsWithLocation[0] ?? mySpots[0];
   const grouped = useMemo(() => {
+    if (viewMode === "theme") return groupByTheme(mySpots);
     if (viewMode === "tag") return groupByTag(mySpots);
     if (viewMode === "season") return groupBySeason(mySpots);
     if (viewMode === "status") return groupByStatus(mySpots);
@@ -107,6 +108,7 @@ export function WishlistPage() {
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 <FilterChip label="ボード" active={viewMode === "all"} onClick={() => setViewMode("all")} />
+                <FilterChip label="テーマ別" active={viewMode === "theme"} onClick={() => setViewMode("theme")} />
                 <FilterChip label="タグ別" active={viewMode === "tag"} onClick={() => setViewMode("tag")} />
                 <FilterChip label="季節別" active={viewMode === "season"} onClick={() => setViewMode("season")} />
                 <FilterChip label="状態別" active={viewMode === "status"} onClick={() => setViewMode("status")} />
@@ -383,6 +385,13 @@ function groupByTag(items: MySpot[]) {
   return Array.from(groups.entries())
     .map(([label, groupedSpots]) => ({ label, spots: groupedSpots }))
     .sort((a, b) => b.spots.length - a.spots.length || a.label.localeCompare(b.label, "ja"));
+}
+
+function groupByTheme(items: MySpot[]) {
+  const themes = Array.from(new Set(items.flatMap((spot) => spot.themes)));
+  return themes
+    .map((theme) => ({ label: mySpotThemeLabels[theme], spots: items.filter((spot) => spot.themes.includes(theme)) }))
+    .filter((group) => group.spots.length > 0);
 }
 
 function groupBySeason(items: MySpot[]) {

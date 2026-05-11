@@ -44,14 +44,37 @@ function getStatusFromSpot(spot: Spot) {
   return "someday";
 }
 
+function getThemeFromSpot(spot: Spot) {
+  const theme = spot.travelStyle.find((item) => item.startsWith("theme:"))?.replace("theme:", "");
+  if (
+    theme === "nature" ||
+    theme === "starry" ||
+    theme === "sea" ||
+    theme === "mountain" ||
+    theme === "onsen" ||
+    theme === "history" ||
+    theme === "city" ||
+    theme === "food" ||
+    theme === "hotel" ||
+    theme === "cafe" ||
+    theme === "drive" ||
+    theme === "overseas" ||
+    theme === "lifetime"
+  ) {
+    return theme;
+  }
+  return "nature";
+}
+
 function buildMarkerIcon(L: LeafletModule, spot: Spot, selected: boolean) {
   const status = getStatusFromSpot(spot);
+  const theme = getThemeFromSpot(spot);
   const lifetime = spot.tags.includes("一生に一度");
   const size = selected ? 40 : lifetime ? 34 : status === "demo" ? 22 : status === "thisYear" ? 30 : 26;
 
   return L.divIcon({
     className: "",
-    html: `<span class="zekkei-map-pin zekkei-map-pin-${status}${lifetime ? " zekkei-map-pin-lifetime" : ""}${selected ? " zekkei-map-pin-selected" : ""}"><span>${lifetime ? "★" : ""}</span></span>`,
+    html: `<span class="zekkei-map-pin zekkei-map-pin-${status} zekkei-map-pin-theme-${theme}${lifetime ? " zekkei-map-pin-lifetime" : ""}${selected ? " zekkei-map-pin-selected" : ""}"><span>${lifetime ? "★" : ""}</span></span>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2]
   });

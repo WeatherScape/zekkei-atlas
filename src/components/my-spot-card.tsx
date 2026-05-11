@@ -1,10 +1,12 @@
 "use client";
 
-import { ExternalLink, MapPin, MoreHorizontal, Pencil, Star, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Bot, CheckCircle2, ExternalLink, MapPin, MoreHorizontal, Pencil, Sparkles, Star, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { mySpotStatusLabels, type MySpot } from "@/data/my-spots";
+import { mySpotStatusLabels, mySpotThemeLabels, type MySpot } from "@/data/my-spots";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { generateMySpotPlan } from "@/lib/generateMySpotPlan";
 import { cn } from "@/lib/utils";
 
 const statusTone: Record<MySpot["status"], string> = {
@@ -33,6 +35,9 @@ export function MySpotCard({
 }) {
   const hasLocation = typeof spot.latitude === "number" && typeof spot.longitude === "number";
   const wishLevel = spot.wishLevel ?? 4;
+  const [planOpen, setPlanOpen] = useState(false);
+  const plan = useMemo(() => generateMySpotPlan(spot), [spot]);
+  const nextStep = spot.nextStep || spot.firstStepMemo;
 
   return (
     <motion.article
@@ -123,11 +128,41 @@ export function MySpotCard({
           <p className="line-clamp-2 text-sm leading-7 text-slate-300">{spot.memo}</p>
         ) : null}
 
+        {!compact && spot.reason ? (
+          <div className="rounded-2xl border border-rose-200/15 bg-rose-200/[0.07] p-4">
+            <p className="text-xs uppercase tracking-[0.16em] text-rose-100/75">行きたい理由</p>
+            <p className="mt-2 text-sm leading-7 text-white">{spot.reason}</p>
+          </div>
+        ) : null}
+
         <div className="flex flex-wrap gap-2">
           {(spot.tags.length ? spot.tags : ["あとで整理"]).slice(0, compact ? 3 : 5).map((tag) => (
             <Badge key={tag}>#{tag}</Badge>
           ))}
         </div>
+
+        {!compact && spot.themes.length ? (
+          <div className="flex flex-wrap gap-2">
+            {spot.themes.slice(0, 5).map((theme) => (
+              <Badge key={theme} className="border border-cyan-200/20 bg-cyan-200/[0.09] text-cyan-50">
+                {mySpotThemeLabels[theme]}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
+
+        {!compact && spot.activities.length ? (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-400">そこでやりたいこと</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {spot.activities.slice(0, 6).map((activity) => (
+                <span key={activity} className="rounded-full border border-white/10 bg-white/[0.07] px-3 py-1.5 text-xs text-slate-100">
+                  {activity}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-2 gap-3 text-sm">
           <Info label="行きたい度" value={`${wishLevel}/5`} />
@@ -140,14 +175,51 @@ export function MySpotCard({
           ) : null}
         </div>
 
-        {!compact && spot.firstStepMemo ? (
+        {!compact && nextStep ? (
           <div className="rounded-2xl border border-cyan-200/15 bg-cyan-200/[0.07] p-4">
-            <p className="text-xs uppercase tracking-[0.16em] text-cyan-100/75">First Step</p>
-            <p className="mt-2 text-sm leading-7 text-white">{spot.firstStepMemo}</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-cyan-100/75">次にやること</p>
+            <p className="mt-2 text-sm leading-7 text-white">{nextStep}</p>
           </div>
         ) : null}
 
-        <div className="flex items-center gap-3">
+        {!compact && planOpen ? (
+          <div className="rounded-3xl border border-amber-200/20 bg-amber-200/[0.08] p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold text-amber-50">
+              <Bot className="h-4 w-4" />
+              {plan.title}
+            </p>
+            <div className="mt-3 grid gap-2 text-sm text-slate-200">
+              <PlanLine label="おすすめ時期" value={plan.bestTiming} />
+              <PlanLine label="必要日数" value={plan.duration} />
+              <PlanLine label="ざっくり予算" value={plan.budget} />
+            </div>
+            <div className="mt-4 space-y-2">
+              {plan.firstResearch.slice(0, 3).map((item) => (
+                <p key={item} className="flex gap-2 text-xs leading-6 text-slate-200">
+                  <CheckCircle2 className="mt-1 h-3.5 w-3.5 shrink-0 text-amber-100" />
+                  {item}
+                </p>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+          {!compact ? (
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setPlanOpen((current) => !current);
+              }}
+            >
+              <Sparkles className="h-4 w-4" />
+              AIプランを見る
+            </Button>
+          ) : null}
           {spot.sourceUrl ? (
             <a
               href={spot.sourceUrl}
@@ -176,6 +248,15 @@ function Info({ label, value }: { label: string; value: string }) {
     <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-3">
       <p className="text-xs text-slate-400">{label}</p>
       <p className="mt-1 font-medium text-white">{value}</p>
+    </div>
+  );
+}
+
+function PlanLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-3">
+      <p className="text-[11px] text-amber-100/75">{label}</p>
+      <p className="mt-1 leading-6 text-white">{value}</p>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { spots, type Spot } from "@/data/spots";
 import {
   enrichDraftSpot,
+  mySpotThemeOptions,
   normalizeMySpotStatus,
   officialSpotToMySpot,
   type MySpot,
@@ -13,6 +14,7 @@ import {
 const MY_SPOTS_KEY = "zekkei-atlas-my-spots";
 const LEGACY_WISHLIST_KEY = "zekkei-atlas-wishlist";
 const MIGRATION_KEY = "zekkei-atlas-my-spots-migrated";
+const THEME_VALUES = new Set(mySpotThemeOptions.map((theme) => theme.value));
 
 let mySpots: MySpot[] = [];
 let hydrated = false;
@@ -49,12 +51,23 @@ function sanitizeMySpot(value: unknown): MySpot | null {
       ? item.bestSeason.filter((season): season is string => typeof season === "string")
       : [],
     status: normalizeMySpotStatus(item.status),
+    reason: item.reason ? String(item.reason) : item.memo ? String(item.memo) : undefined,
+    activities: Array.isArray(item.activities)
+      ? item.activities.filter((activity): activity is string => typeof activity === "string")
+      : [],
+    themes: Array.isArray(item.themes)
+      ? item.themes.filter(
+          (theme): theme is NonNullable<MySpot["themes"]>[number] =>
+            typeof theme === "string" && THEME_VALUES.has(theme as NonNullable<MySpot["themes"]>[number])
+        )
+      : [],
     wishLevel: typeof item.wishLevel === "number" ? Math.min(5, Math.max(1, item.wishLevel)) : undefined,
     companion: item.companion ? String(item.companion) : undefined,
     bestTime: Array.isArray(item.bestTime)
       ? item.bestTime.filter((time): time is string => typeof time === "string")
       : undefined,
     firstStepMemo: item.firstStepMemo ? String(item.firstStepMemo) : undefined,
+    nextStep: item.nextStep ? String(item.nextStep) : item.firstStepMemo ? String(item.firstStepMemo) : undefined,
     catchCopy: item.catchCopy ? String(item.catchCopy) : undefined,
     createdAt: item.createdAt ?? new Date().toISOString(),
     updatedAt: item.updatedAt ?? new Date().toISOString()
@@ -177,10 +190,14 @@ export function useMySpots() {
       tags: enriched.tags ?? [],
       bestSeason: enriched.bestSeason ?? [],
       status: normalizeMySpotStatus(enriched.status),
+      reason: enriched.reason?.trim() || undefined,
+      activities: enriched.activities ?? [],
+      themes: enriched.themes ?? [],
       wishLevel: enriched.wishLevel,
       companion: enriched.companion?.trim() || undefined,
       bestTime: enriched.bestTime ?? [],
       firstStepMemo: enriched.firstStepMemo?.trim() || undefined,
+      nextStep: enriched.nextStep?.trim() || enriched.firstStepMemo?.trim() || undefined,
       catchCopy: enriched.catchCopy?.trim() || undefined,
       createdAt: now,
       updatedAt: now

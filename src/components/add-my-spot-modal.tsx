@@ -4,6 +4,7 @@ import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { Bot, Check, ImageIcon, LinkIcon, MapPin, Sparkles, Upload, X } from "lucide-react";
 import {
   enrichDraftSpot,
+  mySpotThemeOptions,
   mySpotStatusLabels,
   normalizeMySpotStatus,
   type MySpot,
@@ -25,6 +26,17 @@ const statusOptions: Array<{ value: MySpotStatus; label: string }> = [
 ];
 
 const bestTimeOptions = ["朝", "昼", "夕方", "夜"];
+const activitySuggestions = [
+  "星空を見る",
+  "朝日を見る",
+  "ドライブする",
+  "ご当地グルメを食べる",
+  "写真を撮る",
+  "ホテルに泊まる",
+  "海で泳ぐ",
+  "トレッキングする",
+  "夕日を見る"
+];
 
 export function AddMySpotModal({
   open,
@@ -56,6 +68,9 @@ export function AddMySpotModal({
   const [bestSeason, setBestSeason] = useState<string[]>([]);
   const [bestTime, setBestTime] = useState<string[]>([]);
   const [status, setStatus] = useState<MySpotStatus>("someday");
+  const [reason, setReason] = useState("");
+  const [activitiesText, setActivitiesText] = useState("");
+  const [themes, setThemes] = useState<string[]>([]);
   const [wishLevel, setWishLevel] = useState(4);
   const [companion, setCompanion] = useState("");
   const [firstStepMemo, setFirstStepMemo] = useState("");
@@ -78,9 +93,12 @@ export function AddMySpotModal({
       setBestSeason(editingSpot.bestSeason);
       setBestTime(editingSpot.bestTime ?? []);
       setStatus(editingSpot.status);
+      setReason(editingSpot.reason ?? editingSpot.memo ?? "");
+      setActivitiesText(editingSpot.activities.join(", "));
+      setThemes(editingSpot.themes);
       setWishLevel(editingSpot.wishLevel ?? 4);
       setCompanion(editingSpot.companion ?? "");
-      setFirstStepMemo(editingSpot.firstStepMemo ?? "");
+      setFirstStepMemo(editingSpot.nextStep ?? editingSpot.firstStepMemo ?? "");
       setCatchCopy(editingSpot.catchCopy ?? "");
       setImageError("");
       return;
@@ -97,6 +115,9 @@ export function AddMySpotModal({
     setBestSeason([]);
     setBestTime([]);
     setStatus("someday");
+    setReason("");
+    setActivitiesText("");
+    setThemes([]);
     setWishLevel(4);
     setCompanion("");
     setFirstStepMemo("");
@@ -121,9 +142,16 @@ export function AddMySpotModal({
       bestSeason,
       bestTime,
       status,
+      reason,
+      activities: activitiesText
+        .split(/[,、\n]+/)
+        .map((activity) => activity.trim())
+        .filter(Boolean),
+      themes: themes as MySpotDraft["themes"],
       wishLevel,
       companion,
       firstStepMemo,
+      nextStep: firstStepMemo,
       catchCopy
     }),
     [
@@ -138,10 +166,13 @@ export function AddMySpotModal({
       longitude,
       memo,
       name,
+      reason,
       region,
       sourceUrl,
       status,
       tagsText,
+      activitiesText,
+      themes,
       wishLevel
     ]
   );
@@ -159,6 +190,23 @@ export function AddMySpotModal({
   const toggleBestTime = (time: string) => {
     setBestTime((current) =>
       current.includes(time) ? current.filter((item) => item !== time) : [...current, time]
+    );
+  };
+
+  const toggleActivity = (activity: string) => {
+    const current = activitiesText
+      .split(/[,、\n]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const next = current.includes(activity)
+      ? current.filter((item) => item !== activity)
+      : [...current, activity];
+    setActivitiesText(next.join(", "));
+  };
+
+  const toggleTheme = (theme: string) => {
+    setThemes((current) =>
+      current.includes(theme) ? current.filter((item) => item !== theme) : [...current, theme]
     );
   };
 
@@ -198,9 +246,13 @@ export function AddMySpotModal({
       bestSeason: preview.bestSeason ?? [],
       bestTime: preview.bestTime ?? [],
       status: normalizeMySpotStatus(preview.status),
+      reason: preview.reason?.trim() || undefined,
+      activities: preview.activities ?? [],
+      themes: preview.themes ?? [],
       wishLevel: preview.wishLevel,
       companion: preview.companion?.trim() || undefined,
       firstStepMemo: preview.firstStepMemo?.trim() || undefined,
+      nextStep: preview.nextStep?.trim() || preview.firstStepMemo?.trim() || undefined,
       catchCopy: preview.catchCopy?.trim() || undefined
     };
 
@@ -233,7 +285,7 @@ export function AddMySpotModal({
                 {editingSpot ? "My Spotを編集" : "行きたい景色を追加"}
               </h2>
               <p className="mt-2 text-sm leading-7 text-slate-300">
-                SNS URL、場所名、メモを残して、いつか行きたいを本当に行く候補に育てます。
+                SNS URL、場所名、行きたい理由を残して、いつか行きたいを本当に行く候補に育てます。
               </p>
             </div>
             <button
@@ -278,21 +330,62 @@ export function AddMySpotModal({
                 <input
                   value={sourceUrl}
                   onChange={(event) => setSourceUrl(event.target.value)}
-                  placeholder="Instagram / TikTok / YouTube / Google Maps など"
+                  placeholder="InstagramやXで見つけた場所名・URLを貼り付け"
                   className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] pl-11 pr-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
                 />
               </div>
             </Field>
 
-            <Field label="行きたい理由・メモ">
+            <Field label="SNS投稿メモ">
               <textarea
                 value={memo}
                 onChange={(event) => setMemo(event.target.value)}
-                placeholder="この投稿の海がきれい、星空を撮りたい、記念日に行きたい..."
+                placeholder="投稿の雰囲気、保存したきっかけ、あとで見返したい情報..."
                 rows={3}
                 className="w-full resize-none rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
               />
             </Field>
+
+            <Field label="行きたい理由">
+              <textarea
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                placeholder="この絶景を人生で一度は見たい、彼女と記念日に行きたい、星空を見てみたい..."
+                rows={3}
+                className="w-full resize-none rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
+              />
+            </Field>
+
+            <ChoiceGroup label="そこでやりたいこと">
+              {activitySuggestions.map((activity) => (
+                <FilterChip
+                  key={activity}
+                  label={activity}
+                  active={activitiesText
+                    .split(/[,、\n]+/)
+                    .map((item) => item.trim())
+                    .includes(activity)}
+                  onClick={() => toggleActivity(activity)}
+                />
+              ))}
+            </ChoiceGroup>
+            <input
+              value={activitiesText}
+              onChange={(event) => setActivitiesText(event.target.value)}
+              placeholder="星空を見る, 写真を撮る, ホテルに泊まる"
+              className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
+            />
+
+            <ChoiceGroup label="テーマ">
+              {mySpotThemeOptions.map((theme) => (
+                <FilterChip
+                  key={theme.value}
+                  label={theme.label}
+                  active={themes.includes(theme.value)}
+                  onClick={() => toggleTheme(theme.value)}
+                />
+              ))}
+            </ChoiceGroup>
 
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="画像">
@@ -376,11 +469,11 @@ export function AddMySpotModal({
                   className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
                 />
               </Field>
-              <Field label="最初の一歩メモ">
+              <Field label="次にやること">
                 <input
                   value={firstStepMemo}
                   onChange={(event) => setFirstStepMemo(event.target.value)}
-                  placeholder="航空券を見る、季節を調べる、宿を探す..."
+                  placeholder="航空券を調べる、ベストシーズンを調べる、ホテル候補を保存する..."
                   className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/50"
                 />
               </Field>
@@ -444,7 +537,7 @@ export function AddMySpotModal({
           <div className="sticky bottom-0 z-20 -mx-5 mt-6 border-t border-white/10 bg-slate-950/92 p-4 backdrop-blur-xl md:hidden">
             <Button type="submit" size="lg" className="w-full" disabled={!name.trim() && !sourceUrl.trim()}>
               {saved ? <Check className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
-              {saved ? "My Atlasを更新しました" : editingSpot ? "変更を保存" : "My Atlasに残す"}
+              {saved ? "この景色を、あなたの地図に残しました" : editingSpot ? "変更を保存" : "My Atlasに残す"}
             </Button>
           </div>
         </div>
@@ -499,12 +592,30 @@ export function AddMySpotModal({
                   {preview.memo}
                 </p>
               ) : null}
+              {preview.reason ? (
+                <div className="rounded-2xl border border-cyan-200/15 bg-cyan-200/[0.07] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100/75">行きたい理由</p>
+                  <p className="mt-2 text-sm leading-7 text-white">{preview.reason}</p>
+                </div>
+              ) : null}
+              {preview.activities?.length ? (
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">そこでやりたいこと</p>
+                  <div className="flex flex-wrap gap-2">
+                    {preview.activities.map((activity) => (
+                      <Badge key={activity} className="bg-white/[0.08] text-slate-100">
+                        {activity}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
 
           <Button type="submit" size="lg" className="sticky bottom-3 z-10 mt-5 hidden w-full md:inline-flex" disabled={!name.trim() && !sourceUrl.trim()}>
             {saved ? <Check className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
-            {saved ? "My Atlasを更新しました" : editingSpot ? "変更を保存" : "My Atlasに残す"}
+            {saved ? "この景色を、あなたの地図に残しました" : editingSpot ? "変更を保存" : "My Atlasに残す"}
           </Button>
           <p className="mt-3 text-xs leading-6 text-slate-400">
             本物のSNS連携や投稿解析は使わず、入力内容とローカルデータで整理しています。

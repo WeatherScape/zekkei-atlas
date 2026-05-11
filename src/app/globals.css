@@ -163,6 +163,67 @@ textarea {
   width: 8px;
 }
 
+.zekkei-map-pin-theme-sea,
+.zekkei-map-pin-theme-starry {
+  border-color: rgba(103, 232, 249, 0.96);
+  box-shadow: 0 0 0 5px rgba(103, 232, 249, 0.13), 0 0 24px rgba(34, 211, 238, 0.24), 0 14px 34px rgba(2, 6, 23, 0.48);
+}
+
+.zekkei-map-pin-theme-sea > span,
+.zekkei-map-pin-theme-starry > span {
+  background: #67e8f9;
+}
+
+.zekkei-map-pin-theme-mountain,
+.zekkei-map-pin-theme-nature {
+  border-color: rgba(134, 239, 172, 0.88);
+  box-shadow: 0 0 0 5px rgba(134, 239, 172, 0.12), 0 0 22px rgba(34, 197, 94, 0.22), 0 14px 34px rgba(2, 6, 23, 0.48);
+}
+
+.zekkei-map-pin-theme-mountain > span,
+.zekkei-map-pin-theme-nature > span {
+  background: #86efac;
+}
+
+.zekkei-map-pin-theme-food,
+.zekkei-map-pin-theme-cafe,
+.zekkei-map-pin-theme-hotel,
+.zekkei-map-pin-theme-onsen {
+  border-color: rgba(253, 186, 116, 0.92);
+  box-shadow: 0 0 0 5px rgba(253, 186, 116, 0.12), 0 0 22px rgba(251, 146, 60, 0.22), 0 14px 34px rgba(2, 6, 23, 0.48);
+}
+
+.zekkei-map-pin-theme-food > span,
+.zekkei-map-pin-theme-cafe > span,
+.zekkei-map-pin-theme-hotel > span,
+.zekkei-map-pin-theme-onsen > span {
+  background: #fdba74;
+}
+
+.zekkei-map-pin-theme-drive,
+.zekkei-map-pin-theme-city,
+.zekkei-map-pin-theme-history,
+.zekkei-map-pin-theme-overseas {
+  border-color: rgba(216, 180, 254, 0.92);
+  box-shadow: 0 0 0 5px rgba(216, 180, 254, 0.12), 0 0 22px rgba(168, 85, 247, 0.22), 0 14px 34px rgba(2, 6, 23, 0.48);
+}
+
+.zekkei-map-pin-theme-drive > span,
+.zekkei-map-pin-theme-city > span,
+.zekkei-map-pin-theme-history > span,
+.zekkei-map-pin-theme-overseas > span {
+  background: #d8b4fe;
+}
+
+.zekkei-map-pin-theme-lifetime {
+  border-color: rgba(251, 191, 36, 0.98);
+  box-shadow: 0 0 0 7px rgba(251, 191, 36, 0.14), 0 0 30px rgba(251, 191, 36, 0.34), 0 16px 40px rgba(2, 6, 23, 0.52);
+}
+
+.zekkei-map-pin-theme-lifetime > span {
+  background: #fde047;
+}
+
 .zekkei-map-pin-thisYear > span,
 .zekkei-map-pin-lifetime > span {
   background: #fde047;

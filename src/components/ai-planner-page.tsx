@@ -61,18 +61,18 @@ export function AiPlannerPage({ initialPrompt = "" }: { initialPrompt?: string }
           <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-4xl">
               <Badge className="mb-4 border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-50">
-                ZEKKEI Concierge
+                My Atlas Concierge
               </Badge>
               <h1 className="text-balance text-4xl font-semibold tracking-normal md:text-6xl">
-                AI Travel Planner
+                旅の第一歩を作る
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
-                行きたい景色と旅の気分から、次の絶景プランを提案します。
+                保存した景色、行きたい理由、旅の気分から「本当に行くならまず何をするか」をAPIなしのローカルAI風に整理します。
               </p>
             </div>
             <Link href="/map" className={buttonVariants({ variant: "secondary", size: "lg" })}>
               <Map className="h-5 w-5" />
-              地図で探す
+              My Atlasを見る
             </Link>
           </div>
 
@@ -117,7 +117,7 @@ export function AiPlannerPage({ initialPrompt = "" }: { initialPrompt?: string }
 
                 <Button type="submit" className="w-full" size="lg" disabled={isGenerating}>
                   {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
-                  {isGenerating ? "プラン生成中..." : "AIプランを生成"}
+                  {isGenerating ? "旅の第一歩を整理中..." : "AIに旅の第一歩を考えてもらう"}
                 </Button>
               </form>
             </GlassPanel>

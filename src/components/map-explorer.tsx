@@ -18,9 +18,12 @@ import {
 } from "lucide-react";
 import { seasonOptions, spots, type Spot } from "@/data/spots";
 import {
+  mySpotThemeLabels,
+  mySpotThemeOptions,
   mySpotStatusLabels,
   mySpotToMapSpot,
   type MySpot,
+  type MySpotTheme,
   type MySpotStatus
 } from "@/data/my-spots";
 import { AddMySpotModal } from "@/components/add-my-spot-modal";
@@ -142,6 +145,7 @@ export function MapExplorer({
   const [keyword, setKeyword] = useState(initialSearch);
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>(initialTag ? [initialTag] : []);
+  const [selectedThemes, setSelectedThemes] = useState<MySpotTheme[]>([]);
   const [season, setSeason] = useState(seasonOptions.includes(initialSeason) ? initialSeason : "all");
   const [mode, setMode] = useState<MapViewMode>("all");
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -167,6 +171,7 @@ export function MapExplorer({
     return mySpots
       .filter((spot) => spotMatchesKeyword(spot, keyword))
       .filter((spot) => selectedTags.every((tag) => spot.tags.includes(tag)))
+      .filter((spot) => selectedThemes.every((theme) => spot.themes.includes(theme)))
       .filter((spot) => (season === "all" ? true : spot.bestSeason.includes(season)))
       .filter((spot) => spotMatchesMode(spot, mode))
       .filter((spot) => spotMatchesQuickFilter(spot, quickFilter))
@@ -175,7 +180,7 @@ export function MapExplorer({
           spot.status === "thisYear" ? 0 : spot.status === "planning" ? 1 : spot.status === "someday" ? 2 : 3;
         return priority(a) - priority(b) || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
       });
-  }, [keyword, mode, mySpots, quickFilter, season, selectedTags]);
+  }, [keyword, mode, mySpots, quickFilter, season, selectedTags, selectedThemes]);
 
   const locatedSpots = useMemo(
     () => filteredSpots.filter((spot) => typeof spot.latitude === "number" && typeof spot.longitude === "number"),
@@ -212,6 +217,7 @@ export function MapExplorer({
   const activeFilterCount =
     (quickFilter !== "all" ? 1 : 0) +
     selectedTags.length +
+    selectedThemes.length +
     (season !== "all" ? 1 : 0) +
     (mode !== "all" ? 1 : 0) +
     (keyword.trim() ? 1 : 0);
@@ -220,6 +226,7 @@ export function MapExplorer({
     setKeyword("");
     setQuickFilter("all");
     setSelectedTags([]);
+    setSelectedThemes([]);
     setSeason("all");
     setMode("all");
     setSelectedId(mySpots[0]?.id);
@@ -232,6 +239,12 @@ export function MapExplorer({
   const toggleTag = (tag: string) => {
     setSelectedTags((current) =>
       current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag]
+    );
+  };
+
+  const toggleTheme = (theme: MySpotTheme) => {
+    setSelectedThemes((current) =>
+      current.includes(theme) ? current.filter((item) => item !== theme) : [...current, theme]
     );
   };
 
@@ -354,6 +367,14 @@ export function MapExplorer({
                     {["一生に一度", "恋人と行きたい", "星空", "海", "島"].map((tag) => (
                       <FilterChip key={tag} label={`#${tag}`} active={selectedTags.includes(tag)} onClick={() => toggleTag(tag)} />
                     ))}
+                    {mySpotThemeOptions.map((theme) => (
+                      <FilterChip
+                        key={theme.value}
+                        label={theme.label}
+                        active={selectedThemes.includes(theme.value)}
+                        onClick={() => toggleTheme(theme.value)}
+                      />
+                    ))}
                   </div>
                 </div>
               ) : null}
@@ -373,6 +394,7 @@ export function MapExplorer({
                 selectedTags={[
                   mySpots.length === 0 ? "サンプル表示" : "",
                   quickFilters.find((item) => item.value === quickFilter)?.label ?? "すべて",
+                  ...selectedThemes.map((theme) => mySpotThemeLabels[theme]),
                   ...selectedTags
                 ].filter((tag) => tag && tag !== "すべて")}
                 addMode={addMode}

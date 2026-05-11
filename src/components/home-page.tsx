@@ -103,7 +103,7 @@ export function HomePage() {
               ZEKKEI ATLAS
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-9 text-slate-200 md:text-2xl">
-              SNSで見つけた「行きたい絶景」を、自分だけの旅地図にまとめる。
+              SNSで見つけた景色、ふと思い出した旅先、人生で見たい場所を、自分だけの地図に残そう。
             </p>
           </motion.div>
 
@@ -119,18 +119,18 @@ export function HomePage() {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="SNS URL、場所名、行きたい理由を貼る..."
+                placeholder="InstagramやXで見つけた場所名・URLを貼り付け"
                 className="h-12 w-full bg-transparent text-base text-white outline-none placeholder:text-slate-400"
               />
             </label>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button type="submit" variant="primary" size="lg" className="w-full sm:w-auto">
                 <Sparkles className="h-5 w-5" />
-                SNS URLから追加
+                この景色を地図に残す
               </Button>
               <Link href="/wishlist" className={buttonVariants({ variant: "secondary", size: "lg", className: "w-full sm:w-auto" })}>
                 <Map className="h-5 w-5" />
-                My Atlasを作る
+                My Atlasを開く
               </Link>
             </div>
           </motion.form>
